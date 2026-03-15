@@ -1,0 +1,5 @@
+{
+  "name": "Justicia Filosófica",
+  "description": "",
+  "requestFramePermissions": ["microphone"]
+}

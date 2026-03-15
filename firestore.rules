@@ -1,0 +1,127 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required, immutable) - Firebase Auth UID
+    //   - email: string (required, immutable) - User's email address
+    //   - displayName: string (optional) - User's display name
+    //   - createdAt: timestamp (required, immutable) - Account creation timestamp
+    //   - role: string (required, immutable for non-admins) - User role ('user' or 'admin')
+    //
+    // Collection: phrases
+    // Document ID: {phraseId}
+    // Fields:
+    //   - id: string (required, immutable) - Unique identifier for the phrase
+    //   - authorUid: string (required, immutable) - UID of the user who generated the phrase
+    //   - originalText: string (required, immutable) - The original Spanish text
+    //   - generatedPhrase: string (required, immutable) - The generated Huchití phrase
+    //   - createdAt: timestamp (required, immutable) - When the phrase was generated
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.authorUid;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function authorUidUnchanged() {
+      return !('authorUid' in request.resource.data) || request.resource.data.authorUid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "gorosave@esoteriaai.com" && request.auth.token.email_verified == true));
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'createdAt', 'role']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.email is string && isValidEmail(data.email) && data.email.size() < 100 &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100)) &&
+             data.createdAt is timestamp &&
+             data.role in ['user', 'admin'];
+    }
+
+    function isValidPhrase(data) {
+      return hasOnlyAllowedFields(['id', 'authorUid', 'originalText', 'generatedPhrase', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() < 100 &&
+             data.authorUid is string && data.authorUid.size() > 0 && data.authorUid.size() < 100 &&
+             data.originalText is string && data.originalText.size() > 0 && data.originalText.size() < 1000 &&
+             data.generatedPhrase is string && data.generatedPhrase.size() > 0 && data.generatedPhrase.size() < 1000 &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && 
+                       isValidUser(request.resource.data) && 
+                       uidUnchanged() && 
+                       ((isOwner(userId) && request.resource.data.role == 'user') || isAdmin());
+      allow update: if isAuthenticated() && 
+                       isValidUser(request.resource.data) && 
+                       uidNotModified() && 
+                       areImmutableFieldsUnchanged(['email', 'createdAt']) &&
+                       ((isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /phrases/{phraseId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && 
+                       isValidPhrase(request.resource.data) && 
+                       authorUidUnchanged();
+      allow update: if false; // Phrases are immutable once generated
+      allow delete: if isDocOwner() || isAdmin();
+    }
+  }
+}
