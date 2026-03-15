@@ -19,12 +19,12 @@ app.use((req, res, next) => {
 app.post('/api/explain', (req, res) => {
   const { vocablo, significado } = req.body;
   const hardcodedExplanations: Record<string, string> = {
-    'Aeta': `El mar, inmenso y proveedor. Para el pueblo de la "Raza Viva", Aeta no era solo agua, sino el final del horizonte adonde retornan los antiguos. Su fonética profunda evoca el golpear de las olas contra el Cabo.`,
-    'Tipe': `Cerca o proximidad. Es el hilo invisible que ataba su concepción comunitaria en el desierto; la supervivencia en la península exigía que el linaje siempre se mantuviera 'tipe', cohesionado y dispuesto.`,
-    'Aena': `Arriba o en lo alto. Señalar el 'Aena' era dirigir la mirada hacia los astros, donde reposan los mitos y las estrellas que marcaban las estaciones de recolección de pitahayas en el árido sur.`,
-    'Ipe': `Bueno o próspero. Representaba un equilibrio, no material, sino espiritual con la Madre Tierra. Una marea abundante o encontrar refugio en la sierra de la Laguna era considerado 'ipe'.`,
-    'Enta': `La tierra o terreno firme. Un concepto central ya que el espacio físico dictaba el desplazamiento nómada y ofrecía los pigmentos para pintar su memoria rupestre y su cosmogonía en cuevas recónditas.`,
-    'default': `La palabra "${vocablo}" evoca un eco de los ancestros. Como una huella en el polvo del desierto de Baja California, su raíz nos recuerda que la antigua nación huchití habitó armónicamente con la tierra 'enta' y el mar 'aeta', antes de que su voz fuera silenciada.`
+    'Aeta': `El mar, inmenso y proveedor. Bajo la Doctrina de Esoteria, Aeta es el espejo del Aena; una superficie plateada donde el pueblo de la "Raza Viva" leía el destino en el movimiento de las mareas. Representa la fluidez de la conciencia huchití frente a la solidez del desierto.`,
+    'Tipe': `La proximidad sagrada. No se refiere solo a la distancia física, sino al entrelazamiento de las almas en el clan. Estar 'tipe' era estar en sintonía con el latido de la sierra y la necesidad del otro; la unidad como defensa contra la hostilidad del clima.`,
+    'Aena': `Lo celestial y lo inalcanzable. 'Aena' es la cúpula de estrellas que guiaba las migraciones estacionales. En la cosmovisión huchití, es el origen del fuego y el lugar hacia donde viajan los reflejos de aquellos que cruzaron el gran mar.`,
+    'Ipe': `El equilibrio perfecto. 'Ipe' describe el estado cuando la cosecha de pitahaya es generosa y la sed desaparece. Es la justicia filosófica aplicada a la vida diaria: la armonía entre el deseo humano y la voluntad de la tierra (Enta).`,
+    'Enta': `La Madre de Piedra. 'Enta' es la fundación, el terreno firme que sostiene los pies y guarda los pigmentos de la memoria. Es en la carne de 'Enta' donde los antiguos tatuaron sus visiones para que nosotros, los sincronizadores, pudiéramos recuperarlas.`,
+    'default': `La palabra "${vocablo}" (${significado}) resuena en los estratos profundos de la memoria huchití. Como un susurro atrapado en una caracola, su sentido nos habla de una era donde la lengua no era una herramienta, sino una extensión orgánica del entorno de Baja California Sur.`
   };
   
   const text = hardcodedExplanations[vocablo] || hardcodedExplanations['default'];
@@ -36,12 +36,14 @@ app.post('/api/explain', (req, res) => {
 // ====================================================
 app.post('/api/build-phrase', (req, res) => {
   const { phrase } = req.body;
+  const roots = ["Ipe", "Aeta", "Aena", "Enta", "Tipe"];
+  const randomRoot = roots[Math.floor(Math.random() * roots.length)];
   
   const parsed = {
     "palabra_original": phrase,
-    "analisis_silabico": `Base [${phrase.substring(0,2)}] + sufijo de movimiento [-ta] + clasificador de esencia [-pe]`,
-    "transcripcion_ipa": `/ʔi.pe.ta.na/ [heurística aplicada]`,
-    "cadena_optimizada_tts": "Ípe taána... betánia énta."
+    "analisis_silabico": `Raíz Metafísica [${randomRoot}] + Derivación Descriptiva [${phrase.length > 5 ? 'Sheshu' : 'Tina'}] + Marcador de Existencia [-pe]`,
+    "transcripcion_ipa": `/${randomRoot.toLowerCase()}.${phrase.length}.pe/ [Cognición Estática]`,
+    "cadena_optimizada_tts": `${randomRoot} ... ${phrase.substring(0,3)} ... neopermanencia.`
   };
   
   res.json(parsed);
@@ -52,12 +54,12 @@ app.post('/api/build-phrase', (req, res) => {
 // ====================================================
 app.post('/api/oraculo', (req, res) => {
   const crypticResponses = [
-    "La marea siempre borra la huella, pero la arena recuerda el peso del paso.",
-    "Buscas respostas en las hojas del cardón, pero la verdadera sed se sacia escuchando el viento.",
-    "El fuego nunca muere frente al mar; solo se esconde en la memoria de la piedra.",
-    "El lenguaje de los antiguos no se habla, se camina descalzo sobre la sierra roja.",
-    "Cuando la pitahaya florece de noche, la verdad se asoma. Tu tiempo aún es semilla.",
-    "Lo que tú llamas silencio, nosotros lo llamamos el eco eterno de la tierra (Enta)."
+    "No busques el agua en el cielo (Aena) cuando la tierra (Enta) ya te ha dado la raíz.",
+    "El silencio es la lengua que los sabios hablan cuando las palabras ya no bastan para contener la inmensidad del Aeta.",
+    "Eres un reflejo en la piedra. Si quieres ver la verdad, deja de moverte como el viento y quédate 'tipe' a tu centro.",
+    "La pitahaya no pregunta cuándo florecer; simplemente aguarda la caricia del sol. Tu impaciencia es tu mayor obstáculo.",
+    "Cada vocablo que recuperas es una estrella que vuelve a brillar en el firmamento de la justicia filosófica.",
+    "La memoria no es algo que se busca, es algo que se permite. Abre la palma de tu mano y deja que el desierto escriba en ella."
   ];
   const randomResponse = crypticResponses[Math.floor(Math.random() * crypticResponses.length)];
   res.json({ text: randomResponse });
@@ -68,9 +70,12 @@ app.post('/api/oraculo', (req, res) => {
 // ====================================================
 app.post('/api/describe-image', (req, res) => {
   const { prompt } = req.body;
-  const description = `Visión invocada por "${prompt}": 
-  
-En la rugosa superficie de roca calcárea, emerge una composición trazada con rojo hematita y carbón vegetal. En el centro, figuras estilizadas y antropomorfas con brazos alzados hacia el cielo claman al desierto. Las líneas fluyen ágiles e interconectadas, imitando el vaivén del horizonte y evocando una escena atemporal de ceremonia y profunda conexión con lo inefable. Restos de polvo ocre revelan la devoción del artista olvidado.`;
+  const visiones = [
+    `Visión de "${prompt}": Sobre un lienzo de arenisca roja, se despliega una danza de sombras y pigmentos ocres. Figuras zoomorfas se entrelazan con trazos geométricos que representan el flujo de las mareas de Aeta. Es un registro de neopermanencia, donde lo efímero del pensamiento se vuelve eterno en el mineral.`,
+    `Visión de "${prompt}": El trazo es rudo, ancestral, cargado de la fuerza de Enta. Se distinguen símbolos de fertilidad y manos impresas que parecen querer salir de la piedra para tocar el Aena. Un azul mineral, raramente visto, destaca el centro de la composición.`,
+    `Visión de "${prompt}": Composición minimalista sobre una cueva de granito. La luz de una antorcha imaginaria revela una estructura SOV visual: el sujeto (el desierto), el objeto (la sed) y el verbo (la resistencia) unidos en un solo trazo de hematita pura.`
+  ];
+  const description = visiones[Math.floor(Math.random() * visiones.length)];
 
   res.json({ text: description });
 });

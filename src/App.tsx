@@ -329,8 +329,8 @@ export default function App() {
       <div className="grain-overlay" />
       
       {!isApiHealthy && (
-        <div className="bg-red-500/20 text-red-500 border-b border-red-500/50 p-2 text-center text-xs font-mono uppercase tracking-widest fixed top-0 left-0 right-0 z-50">
-          [!] Advertencia: Servidor de lenguaje local inalcanzable (Mistral @:8001). Asegúrate de correr server.ts
+        <div className="bg-[var(--accent)] text-[var(--bg)] border-b border-[var(--accent)] p-2 text-center text-[10px] font-bold uppercase tracking-[0.3em] fixed top-0 left-0 right-0 z-[60] animate-pulse">
+          [ MODO SOBERANÍA ACTIVO: ARCHIVO HISTÓRICO CARGADO ]
         </div>
       )}
 
