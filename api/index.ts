@@ -76,7 +76,7 @@ En la rugosa superficie de roca calcárea, emerge una composición trazada con r
 });
 
 app.get('/api/status', (_req, res) => {
-  res.json({ ok: true, gemini: false, hardcoded_demo: true });
+  res.json({ ok: true, engine: 'Hardcoded Demo (Sovereignty Test Mode)' });
 });
 
 const PORT = process.env.PORT || 3002;

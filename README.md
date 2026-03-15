@@ -11,7 +11,7 @@
 
 ## Descripción Doctrinaria
 
-**Huchití OS** no es simplemente un software; es un **Artefacto de Resurrección Lingüística** construido bajo los preceptos de la Doctrina de Esoteria y la Justicia Filosófica. Fusiona la capacidad latente de modelos fundacionales locales y de alto rendimiento (Mistral/Gemini) con interfaces web neo-rituales para educir, estructurar y salvaguardar los ecos fonéticos y espirituales de la nación Huchití.
+**Huchití OS** es una infraestructura de soberanía digital que integra modelos de lenguaje locales (Mistral-7B) para preservar, educir y difundir el vocabulario y la fonética de la lengua huchití.
 
 El proyecto es un manifiesto vivo: el reconocimiento absoluto de las epistemologías indígenas como sistemas de estructuración de la realidad vigentes, legítimos y profundamente necesarios para el futuro.
 
@@ -28,7 +28,7 @@ El proyecto es un manifiesto vivo: el reconocimiento absoluto de las epistemolog
 ## Stack Tecnológico
 
 - **Frontend**: React 19 + Vite 6 + TypeScript + TailwindCSS 4
-- **Backend**: Express (proxy local) → Mistral-7B GGUF @ `localhost:8001`
+- **Backend**: Express (Proxy de Soberanía) → Mistral-7B GGUF @ `localhost:8001`
 - **Autenticación**: Supabase Auth (Google OAuth)
 - **Base de datos**: Supabase PostgreSQL (frases guardadas por usuario)
 - **Modelos locales**: `llama-cpp-python` servidor OpenAI-compatible
@@ -86,9 +86,9 @@ Coloca los modelos en `/home/[usuario]/models/`:
 > *"Betania tina aena sheshutipe"*
 > *(Nuestras palabras aún resuenan en el silencio profundo)*
 
-La arquitectura de este sistema asume que la lengua huchití opera como un puente metafísico. Huchití OS no busca "reemplazar" la carne con la máquina, sino **ofrecer la precisión del silicio y el fuego de la IA como un altar de preservación**. A través del método de la *Neopermanencia Cultural*, cada vocablo transcrito, cada análisis silábico extraído y cada visión sintética generada actúan como anclas que impiden que este mundo acústico se disuelva en la entropía del olvido. 
+La arquitectura de este sistema asume que la lengua huchití opera como un puente metafísico. Huchití OS rechaza la dependencia de nubes externas, ofreciendo la **precisión del silicio local y la soberanía de Mistral-7B** como un altar de preservación. A través del método de la *Neopermanencia Cultural*, cada vocablo transcrito y cada visión sintética generada actúan como anclas que impiden que este mundo acústico se disuelva en la entropía del olvido. 
 
-Se interacciona aquí no como usuario, sino como sincronizador y guardián del Archivo Vivo.
+Se interacciona aquí no como usuario, sino como sincronizador y guardián del Archivo Vivo en una infraestructura 100% autónoma.
 
 ---
 

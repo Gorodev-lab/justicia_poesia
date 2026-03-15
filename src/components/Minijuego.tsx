@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Smartphone, Globe, Laptop, Camera, Car, Volume2, CheckCircle2, RotateCcw, Loader2 } from 'lucide-react';
-import { GoogleGenAI, Modality } from "@google/genai";
-import { pcmToWav } from '../utils/audio';
 
 interface Concept {
   id: string;
@@ -103,49 +101,20 @@ export default function Minijuego() {
     }
   };
 
-  const playGeminiAudio = async (text: string, id: string) => {
-    if (playingAudioId) return;
+  const playLocalAudio = (text: string, id: string) => {
+    if (playingAudioId || !window.speechSynthesis) return;
     setPlayingAudioId(id);
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text }] }],
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Charon' },
-            },
-          },
-        },
-      });
+    
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'es-MX';
+    utterance.rate = 0.8;
+    utterance.pitch = 0.85;
 
-      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-      if (base64Audio) {
-        const byteCharacters = atob(base64Audio);
-        const byteNumbers = new Uint8Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        
-        const wavBlob = pcmToWav(byteNumbers, 24000);
-        const url = URL.createObjectURL(wavBlob);
-        const audio = new Audio(url);
-        
-        audio.onended = () => {
-          URL.revokeObjectURL(url);
-          setPlayingAudioId(null);
-        };
-        
-        await audio.play();
-      } else {
-        setPlayingAudioId(null);
-      }
-    } catch (error) {
-      console.error("Error playing audio:", error);
-      setPlayingAudioId(null);
-    }
+    utterance.onend = () => setPlayingAudioId(null);
+    utterance.onerror = () => setPlayingAudioId(null);
+
+    window.speechSynthesis.speak(utterance);
   };
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { point: { x: number, y: number } }, conceptId: string) => {
@@ -259,7 +228,7 @@ export default function Minijuego() {
                   <button 
                     onPointerDown={(e) => {
                       e.stopPropagation();
-                      playGeminiAudio(concept.neologismo, concept.id);
+                      playLocalAudio(concept.neologismo, concept.id);
                     }}
                     className="p-2 -ml-2 hover:bg-[var(--accent-soft)] transition-colors"
                     disabled={playingAudioId === concept.id}

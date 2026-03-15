@@ -1,17 +1,12 @@
 import express from 'express';
 import { createServer } from 'http';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 
-// --- Configuración de modelos ---
-// Preferimos Gemini (online) para despliegues como Vercel y para "hardcodear" respuestas coherentes.
-// Mantenemos la estructura de Mistral como fallback local si es necesario.
-const GENAI_API_KEY = process.env.VITE_GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(GENAI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
+// --- Configuración de modelos (Soberanía Local) ---
+// Huchití OS opera ahora exclusivamente bajo infraestructura local para garantizar
+// la privacidad y la neopermanencia sin dependencia de nubes externas.
 const MISTRAL_BASE_URL = 'http://localhost:8001/v1';
 const MODEL_ID = '/home/gorops/models/Mistral-7B-Instruct-v0.3-Q4_K_M.gguf';
 
@@ -24,20 +19,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// --- Helper: decidir qué modelo usar ---
+// --- Helper: Motor de Inferencia Local ---
 async function callAI(messages: { role: string; content: string }[], options: any = {}) {
-  if (GENAI_API_KEY) {
-    try {
-      // Prompt dinámico basado en el historial de mensajes
-      const prompt = messages.map(m => `${m.role}: ${m.content}`).join('\n');
-      const result = await model.generateContent(prompt);
-      return result.response.text();
-    } catch (e) {
-      console.error('Gemini error, falling back to Mistral (if reachable):', e);
-    }
-  }
-
-  // Fallback a Mistral Local
   const body = {
     model: MODEL_ID,
     messages,
@@ -53,7 +36,7 @@ async function callAI(messages: { role: string; content: string }[], options: an
   });
 
   if (!response.ok) {
-    throw new Error(`Mistral error ${response.status}`);
+    throw new Error(`Local Neural Engine Error: ${response.status} (Asegúrate de que Mistral esté corriendo en :8001)`);
   }
   const data = await response.json() as any;
   return data.choices[0].message.content as string;
@@ -166,11 +149,11 @@ app.post('/api/describe-image', async (req, res) => {
 });
 
 app.get('/api/status', async (_req, res) => {
-  res.json({ ok: true, gemini: !!GENAI_API_KEY });
+  res.json({ ok: true, engine: 'Mistral-7B (Local)' });
 });
 
 const PORT = process.env.PORT || 3002;
 createServer(app).listen(PORT, () => {
   console.log(`🏛️  Huchití OS Backend — escuchando en puerto ${PORT}`);
-  console.log(`✨ Proveedor: ${GENAI_API_KEY ? 'Gemini (Online)' : 'Mistral (Local Fallback)'}`);
+  console.log(`✨ Arquitectura: Soberanía de Datos (Infraestructura Local)`);
 });
