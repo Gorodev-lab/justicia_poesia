@@ -1,8 +1,6 @@
 import React, { useRef } from 'react';
 import { Loader2 } from 'lucide-react';
-import { ParallaxImage } from './ParallaxImage';
-import { ParallaxVideo } from './ParallaxVideo';
-import { motion, useScroll, useTransform } from 'motion/react';
+
 
 interface GeneradorProps {
   imagenPrompt: string;
@@ -84,7 +82,9 @@ export function Generador({
           </button>
         </div>
         {imagenResult && (
-          <ParallaxImage src={imagenResult} alt="Resultado Rupestre" />
+          <div className="p-6 border border-[var(--border)] bg-[var(--card-bg)] text-sm font-mono whitespace-pre-wrap leading-relaxed">
+            {imagenResult}
+          </div>
         )}
       </section>
 
@@ -124,7 +124,9 @@ export function Generador({
           </div>
         </div>
         {veoResult && (
-          <ParallaxVideo src={veoResult} />
+          <div className="p-6 border border-[var(--border)] bg-[var(--card-bg)] text-sm font-mono whitespace-pre-wrap leading-relaxed">
+            {veoResult}
+          </div>
         )}
       </section>
     </motion.div>
