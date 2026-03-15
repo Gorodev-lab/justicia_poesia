@@ -1,19 +1,8 @@
 import express from 'express';
 import { createServer } from 'http';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
-
-// --- Configuración de modelos ---
-// Preferimos Gemini (online) para despliegues como Vercel y para "hardcodear" respuestas coherentes.
-// Mantenemos la estructura de Mistral como fallback local si es necesario.
-const GENAI_API_KEY = process.env.VITE_GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(GENAI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-const MISTRAL_BASE_URL = 'http://localhost:8001/v1';
-const MODEL_ID = '/home/gorops/models/Mistral-7B-Instruct-v0.3-Q4_K_M.gguf';
 
 // CORS para el frontend Vite
 app.use((req, res, next) => {
@@ -24,156 +13,77 @@ app.use((req, res, next) => {
   next();
 });
 
-// --- Helper: decidir qué modelo usar ---
-async function callAI(messages: { role: string; content: string }[], options: any = {}) {
-  if (GENAI_API_KEY) {
-    try {
-      // Prompt dinámico basado en el historial de mensajes
-      const prompt = messages.map(m => `${m.role}: ${m.content}`).join('\n');
-      const result = await model.generateContent(prompt);
-      return result.response.text();
-    } catch (e) {
-      console.error('Gemini error, falling back to Mistral (if reachable):', e);
-    }
-  }
-
-  // Fallback a Mistral Local
-  const body = {
-    model: MODEL_ID,
-    messages,
-    max_tokens: options.max_tokens ?? 1024,
-    temperature: options.temperature ?? 0.7,
-    ...(options.response_format ? { response_format: options.response_format } : {}),
-  };
-
-  const response = await fetch(`${MISTRAL_BASE_URL}/chat/completions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Mistral error ${response.status}`);
-  }
-  const data = await response.json() as any;
-  return data.choices[0].message.content as string;
-}
-
 // ====================================================
 // ENDPOINT 1: Explicar vocablo huchití
 // ====================================================
-app.post('/api/explain', async (req, res) => {
+app.post('/api/explain', (req, res) => {
   const { vocablo, significado } = req.body;
-  try {
-    const messages = [
-      {
-        role: 'system',
-        content: 'Eres un experto en Lingüística de Resurrección y Justicia Filosófica. Respondes en español de forma concisa, educativa y respetuosa sobre la cultura huchití de Baja California Sur.'
-      },
-      {
-        role: 'user',
-        content: `Explica el contexto del término "${vocablo}" (${significado}) basado en los documentos de revitalización huchití. Menciona aspectos como la neopermanencia cultural en Baja California Sur, el sistema tetravocálico (a, e, i, u) o la gramática SOV si es relevante. Sé conciso, educativo y respeta la memoria del pueblo huchití/uchití. Máximo 3 párrafos.`
-      }
-    ];
-    const text = await callAI(messages, { max_tokens: 512, temperature: 0.7 });
-    res.json({ text });
-  } catch (e: any) {
-    console.error('[/api/explain]', e.message);
-    res.status(500).json({ error: e.message });
-  }
+  const hardcodedExplanations: Record<string, string> = {
+    'Aeta': `El mar, inmenso y proveedor. Para el pueblo de la "Raza Viva", Aeta no era solo agua, sino el final del horizonte adonde retornan los antiguos. Su fonética profunda evoca el golpear de las olas contra el Cabo.`,
+    'Tipe': `Cerca o proximidad. Es el hilo invisible que ataba su concepción comunitaria en el desierto; la supervivencia en la península exigía que el linaje siempre se mantuviera 'tipe', cohesionado y dispuesto.`,
+    'Aena': `Arriba o en lo alto. Señalar el 'Aena' era dirigir la mirada hacia los astros, donde reposan los mitos y las estrellas que marcaban las estaciones de recolección de pitahayas en el árido sur.`,
+    'Ipe': `Bueno o próspero. Representaba un equilibrio, no material, sino espiritual con la Madre Tierra. Una marea abundante o encontrar refugio en la sierra de la Laguna era considerado 'ipe'.`,
+    'Enta': `La tierra o terreno firme. Un concepto central ya que el espacio físico dictaba el desplazamiento nómada y ofrecía los pigmentos para pintar su memoria rupestre y su cosmogonía en cuevas recónditas.`,
+    'default': `La palabra "${vocablo}" evoca un eco de los ancestros. Como una huella en el polvo del desierto de Baja California, su raíz nos recuerda que la antigua nación huchití habitó armónicamente con la tierra 'enta' y el mar 'aeta', antes de que su voz fuera silenciada.`
+  };
+  
+  const text = hardcodedExplanations[vocablo] || hardcodedExplanations['default'];
+  res.json({ text });
 });
 
 // ====================================================
 // ENDPOINT 2: Constructor de frases
 // ====================================================
-app.post('/api/build-phrase', async (req, res) => {
+app.post('/api/build-phrase', (req, res) => {
   const { phrase } = req.body;
-  try {
-    const messages = [
-      {
-        role: 'system',
-        content: 'Eres un experto en lingüística computacional y fonética histórica, especializado en lenguas nativas americanas y la reconstrucción fonética de la lengua huchití usando heurísticas lakota. Responde SIEMPRE en JSON válido sin texto adicional.'
-      },
-      {
-        role: 'user',
-        content: `Analiza la siguiente frase en español, tradúcela/adáptala al estilo de neologismos huchití (basados en morfología descriptiva lakota) y responde ÚNICAMENTE con este JSON:
-
-{
-  "palabra_original": "[frase original]",
-  "analisis_silabico": "[desglose morfológico]",
-  "transcripcion_ipa": "[transcripción IPA con heurística lakota]",
-  "cadena_optimizada_tts": "[texto fonético para TTS]"
-}
-
-Frase: "${phrase}"`
-      }
-    ];
-
-    const raw = await callAI(messages, {
-      max_tokens: 512,
-      temperature: 0.5
-    });
-
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No se obtuvo JSON válido del modelo');
-    const parsed = JSON.parse(jsonMatch[0]);
-    res.json(parsed);
-  } catch (e: any) {
-    console.error('[/api/build-phrase]', e.message);
-    res.status(500).json({ error: e.message });
-  }
+  
+  const parsed = {
+    "palabra_original": phrase,
+    "analisis_silabico": `Base [${phrase.substring(0,2)}] + sufijo de movimiento [-ta] + clasificador de esencia [-pe]`,
+    "transcripcion_ipa": `/ʔi.pe.ta.na/ [heurística aplicada]`,
+    "cadena_optimizada_tts": "Ípe taána... betánia énta."
+  };
+  
+  res.json(parsed);
 });
 
 // ====================================================
 // ENDPOINT 4: Chat oráculo
 // ====================================================
-app.post('/api/oraculo', async (req, res) => {
-  const { messages } = req.body;
-  try {
-    const systemInstruction = 'Eres un anciano sabio de la nación Huchití. Hablas de forma pausada, poética y críptica. Tu objetivo es guiar al usuario en la comprensión de la filosofía y el lenguaje huchití. Usa metáforas relacionadas con el desierto, el mar y las estrellas. Responde siempre en español.';
-    
-    // Adaptación para callAI
-    const text = await callAI([{ role: 'system', content: systemInstruction }, ...messages], { max_tokens: 400, temperature: 0.85 });
-    res.json({ text });
-  } catch (e: any) {
-    console.error('[/api/oraculo]', e.message);
-    res.status(500).json({ error: e.message });
-  }
+app.post('/api/oraculo', (req, res) => {
+  const crypticResponses = [
+    "La marea siempre borra la huella, pero la arena recuerda el peso del paso.",
+    "Buscas respostas en las hojas del cardón, pero la verdadera sed se sacia escuchando el viento.",
+    "El fuego nunca muere frente al mar; solo se esconde en la memoria de la piedra.",
+    "El lenguaje de los antiguos no se habla, se camina descalzo sobre la sierra roja.",
+    "Cuando la pitahaya florece de noche, la verdad se asoma. Tu tiempo aún es semilla.",
+    "Lo que tú llamas silencio, nosotros lo llamamos el eco eterno de la tierra (Enta)."
+  ];
+  const randomResponse = crypticResponses[Math.floor(Math.random() * crypticResponses.length)];
+  res.json({ text: randomResponse });
 });
 
 // ====================================================
 // ENDPOINT 5: Generador de descripción de imagen
 // ====================================================
-app.post('/api/describe-image', async (req, res) => {
+app.post('/api/describe-image', (req, res) => {
   const { prompt } = req.body;
-  try {
-    const messages = [
-      {
-        role: 'system',
-        content: 'Eres un artista especializado en arte rupestre y pinturas ancestrales huchití con pigmentos minerales. Describes visiones con detalle poético y arqueológico.'
-      },
-      {
-        role: 'user',
-        content: `Describe con detalle visual lo que representaría esta imagen en estilo de pintura rupestre con pigmentos minerales, trazos orgánicos sobre piedra: "${prompt}". Incluye colores, formas, símbolos y composición. Máximo 200 palabras.`
-      }
-    ];
-    const text = await callAI(messages, { max_tokens: 350, temperature: 0.8 });
-    res.json({ text });
-  } catch (e: any) {
-    console.error('[/api/describe-image]', e.message);
-    res.status(500).json({ error: e.message });
-  }
+  const description = `Visión invocada por "${prompt}": 
+  
+En la rugosa superficie de roca calcárea, emerge una composición trazada con rojo hematita y carbón vegetal. En el centro, figuras estilizadas y antropomorfas con brazos alzados hacia el cielo claman al desierto. Las líneas fluyen ágiles e interconectadas, imitando el vaivén del horizonte y evocando una escena atemporal de ceremonia y profunda conexión con lo inefable. Restos de polvo ocre revelan la devoción del artista olvidado.`;
+
+  res.json({ text: description });
 });
 
-app.get('/api/status', async (_req, res) => {
-  res.json({ ok: true, gemini: !!GENAI_API_KEY });
+app.get('/api/status', (_req, res) => {
+  res.json({ ok: true, gemini: false, hardcoded_demo: true });
 });
 
 const PORT = process.env.PORT || 3002;
 if (process.env.NODE_ENV !== 'production') {
   createServer(app).listen(PORT, () => {
     console.log(`🏛️  Huchití OS Backend — escuchando en puerto ${PORT}`);
-    console.log(`✨ Proveedor: ${GENAI_API_KEY ? 'Gemini (Online)' : 'Mistral (Local Fallback)'}`);
+    console.log(`✨ Proveedor: Hardcoded UI/UX Demo Responses activo.`);
   });
 }
 
