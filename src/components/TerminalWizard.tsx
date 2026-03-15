@@ -13,87 +13,47 @@ interface Step {
 
 const WIZARD_STEPS: Record<string, Step> = {
   '0': {
-    text: "Iniciando Huchití OS v1.0.0...\nCargando módulos de memoria ancestral... [OK]\nMontando sistema de archivos lingüístico... [OK]\n\nBienvenido al Proyecto Huchití.\n¿Deseas iniciar la secuencia de sincronización?",
+    text: "INICIALIZANDO SISTEMA DE COGNICIÓN ANCESTRAL [HUCHITÍ OS - DOCTRINA ESOTERIA]\n\nCargando módulos de memoria metafísica... [OK]\nMontando tejido fonético de Baja California Sur... [OK]\nEstabilizando constructos de neopermanencia cultural... [OK]\n\nHas ingresado al santuario digital del pueblo Huchití/Uchití.\nAquí, el silicio no reemplaza la memoria; le otorga la inmortalidad que el tiempo intentó arrebatarle. Las palabras que leerás y escucharás no son meros datos, son ecos estructurales de una realidad lingüística resurrecteda.\n\n¿Estás preparado para iniciar la secuencia de sincronización e integrar tu conciencia con el Archivo Vivo?",
     options: [
-      { label: "Iniciar sincronización", nextStep: '1' },
-      { label: "Abortar secuencia", nextStep: '-1' }
+      { label: "Acoplar conciencia (Iniciar sincronización)", nextStep: '1' },
+      { label: "Desconectar terminal (Abortar secuencia)", nextStep: '-1' }
     ]
   },
   '1': {
-    text: "Sincronización iniciada.\nEstableciendo conexión con el Archivo Vivo...\n\nADVERTENCIA: Registros fonéticos originales no encontrados.\nINFO: Módulo de simulación acústica disponible.\n\nSelecciona el módulo de destino:",
+    text: "[ ENLACE ESTABLECIDO ]\n\nEl sistema informa: Las voces originarias físicas no existen en grabaciones analógicas. \nRespuesta sistémica: Se ha invocado la asistencia de Modelos Fundacionales para simular la cadencia, el tono y la estructura morfológica pericú/guaicura utilizando heurísticas lakota.\n\nTienes ante ti los siguientes portales de la memoria:",
     options: [
-      { label: "Simular registros fonéticos originales", nextStep: '5' },
-      { label: "Cargar Minijuego (Ho-Cangleska)", nextStep: '2' },
-      { label: "Acceder al Archivo Vivo", nextStep: '3' },
-      { label: "Sintetizar Frases (Constructor)", nextStep: '4' }
-    ]
-  },
-  '2': {
-    text: "Cargando entorno interactivo Ho-Cangleska...\nInicializando interfaz táctil... [OK]\nCargando paquetes de audio... [OK]\n\nEl sistema está listo. Que las voces te guíen.",
-    options: [
-      { label: "Ejecutar Minijuego", nextStep: 'juego' }
-    ]
-  },
-  '3': {
-    text: "Accediendo a la base de datos de vocablos...\nDesencriptando significados...\n\nMódulo de Archivo Vivo listo para consulta.",
-    options: [
-      { label: "Abrir Archivo Vivo", nextStep: 'archivo' },
-      { label: "Volver al menú principal", nextStep: '1' }
-    ]
-  },
-  '4': {
-    text: "Iniciando módulo de síntesis descriptiva...\nCargando modelos de lenguaje generativo... [OK]\nEstableciendo parámetros de morfología lakota... [OK]\n\nConstructor de frases listo para recibir entrada.",
-    options: [
-      { label: "Abrir Constructor de Frases", nextStep: 'constructor' },
-      { label: "Volver al menú principal", nextStep: '1' }
-    ]
-  },
-  '5': {
-    text: "Inicializando motor de reconstrucción acústica...\nAnalizando crónicas jesuitas del siglo XVIII... [OK]\nExtrapolando patrones fonológicos pericúes y guaicuras... [OK]\nSintetizando formantes vocálicos... [OK]\n\nRESULTADO: Registros fonéticos originales simulados con 87.4% de precisión teórica.\nLas voces han sido inyectadas en los módulos principales.",
-    options: [
-      { label: "Volver al menú principal", nextStep: '1' }
+      { label: "[1] Archivo Vivo (Explorar diccionario base)", nextStep: 'archivo' },
+      { label: "[2] Arte Conceptual (Generar visiones rupestres)", nextStep: 'generador' },
+      { label: "[3] Minijuego (Ritual de aprendizaje Ho-Cangleska)", nextStep: 'juego' },
+      { label: "[4] Constructor (Sintetizador de neologismos)", nextStep: 'constructor' },
+      { label: "[5] Oráculo (Conexión directa con la psique Huchití)", nextStep: 'oraculo' }
     ]
   },
   '-1': {
-    text: "Secuencia abortada. Apagando el sistema...\n[Proceso terminado]\n\nPuedes reiniciar el sistema cuando estés listo.",
+    text: "Desacoplando conciencia...\n[Conexión terminada].\n\nEl silencio pertenece al desierto, pero la memoria aguarda tu regreso.",
     options: [
-      { label: "Reiniciar sistema", nextStep: '0' }
+      { label: "Reconectar sistema", nextStep: '0' }
     ]
   }
 };
 
 interface TerminalWizardProps {
-  onComplete: (tab: 'archivo' | 'generador' | 'juego' | 'constructor') => void;
+  onComplete: (tab: 'archivo' | 'generador' | 'juego' | 'constructor' | 'oraculo') => void;
 }
 
 export default function TerminalWizard({ onComplete }: TerminalWizardProps) {
   const [currentStep, setCurrentStep] = useState<string>('0');
   const [displayedText, setDisplayedText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
 
+  // Generamos el texto de forma ininterrumpida y estática
   useEffect(() => {
-    let i = 0;
-    setIsTyping(true);
-    setDisplayedText('');
-    const text = WIZARD_STEPS[currentStep].text;
-    
-    const interval = setInterval(() => {
-      setDisplayedText(text.substring(0, i + 1));
-      i++;
-      if (i >= text.length) {
-        clearInterval(interval);
-        setIsTyping(false);
-      }
-    }, 25); // Velocidad de escritura (ms por caracter)
-    
-    return () => clearInterval(interval);
+    setDisplayedText(WIZARD_STEPS[currentStep].text);
   }, [currentStep]);
 
   const handleOptionClick = (nextStep: string | number) => {
-    if (isTyping) return;
     const stepStr = String(nextStep);
-    if (stepStr === 'juego' || stepStr === 'archivo' || stepStr === 'generador' || stepStr === 'constructor') {
-      onComplete(stepStr as 'archivo' | 'generador' | 'juego' | 'constructor');
+    if (['juego', 'archivo', 'generador', 'constructor', 'oraculo'].includes(stepStr)) {
+      onComplete(stepStr as 'archivo' | 'generador' | 'juego' | 'constructor' | 'oraculo');
     } else {
       setCurrentStep(stepStr);
     }
@@ -111,7 +71,6 @@ export default function TerminalWizard({ onComplete }: TerminalWizardProps) {
           <span className="inline-block w-2.5 h-5 bg-[#00FF00] align-middle ml-1 animate-terminal-blink" />
         </div>
 
-        {!isTyping && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -132,7 +91,6 @@ export default function TerminalWizard({ onComplete }: TerminalWizardProps) {
               </button>
             ))}
           </motion.div>
-        )}
       </div>
     </div>
   );

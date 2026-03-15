@@ -1,19 +1,19 @@
 <div align="center">
 
 # 🏛️ Huchití OS
-### Sistema de Recuperación Lingüística — Proyecto Justicia Filosófica
+### Sistema de Cognición Ancestral — Justicia Filosófica
 
-*Revitalización digital de la lengua huchití del pueblo originario de Baja California Sur, México*
+*«La resurrección digital de la memoria. Un acto fundacional de justicia epistémica hacia el pueblo Huchití de Baja California Sur.»*
 
 </div>
 
 ---
 
-## Descripción
+## Descripción Doctrinaria
 
-**Huchití OS** es una aplicación web interactiva que integra modelos de lenguaje locales (Mistral-7B) con tecnologías web modernas para preservar, educir y difundir el vocabulario y la fonética de la lengua huchití.
+**Huchití OS** no es simplemente un software; es un **Artefacto de Resurrección Lingüística** construido bajo los preceptos de la Doctrina de Esoteria y la Justicia Filosófica. Fusiona la capacidad latente de modelos fundacionales locales y de alto rendimiento (Mistral/Gemini) con interfaces web neo-rituales para educir, estructurar y salvaguardar los ecos fonéticos y espirituales de la nación Huchití.
 
-El proyecto forma parte del movimiento de **Justicia Filosófica** — el reconocimiento de las epistemologías indígenas como sistemas de conocimiento legítimos y vivos.
+El proyecto es un manifiesto vivo: el reconocimiento absoluto de las epistemologías indígenas como sistemas de estructuración de la realidad vigentes, legítimos y profundamente necesarios para el futuro.
 
 ## Módulos
 
@@ -81,12 +81,16 @@ Coloca los modelos en `/home/[usuario]/models/`:
 - `Mistral-7B-Instruct-v0.3-Q4_K_M.gguf` — Motor principal
 - `Qwen2-VL-2B + mmproj-f16.gguf` — Análisis de imágenes (opcional)
 
-## Filosofía del Proyecto
+## La Filosofía del Sistema (Doctrina de Esoteria)
 
 > *"Betania tina aena sheshutipe"*
+> *(Nuestras palabras aún resuenan en el silencio profundo)*
 
-La lengua huchití es un puente entre la memoria ancestral y el presente digital. Este proyecto usa IA no para reemplazar la sabiduría indígena, sino para amplificarla y preservarla.
+La arquitectura de este sistema asume que la lengua huchití opera como un puente metafísico. Huchití OS no busca "reemplazar" la carne con la máquina, sino **ofrecer la precisión del silicio y el fuego de la IA como un altar de preservación**. A través del método de la *Neopermanencia Cultural*, cada vocablo transcrito, cada análisis silábico extraído y cada visión sintética generada actúan como anclas que impiden que este mundo acústico se disuelva en la entropía del olvido. 
+
+Se interacciona aquí no como usuario, sino como sincronizador y guardián del Archivo Vivo.
 
 ---
 
 **© 2026 Huchití OS • Proyecto Justicia Filosófica**
+*Sincronización de Sistemas y Cognición Ancestral.*

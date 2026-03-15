@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Justicia Filosófica (Huchití)
+Comment=Lanza la aplicación completa de Justicia Filosófica (Backend + Frontend)
+Exec=sh -c '"/home/gorops/proyectos antigravity/justicia-filosófica (1)/huchiti_launcher.sh"'
+Icon=utilities-terminal
+Terminal=true
+Categories=Development;Education;
+StartupNotify=true
