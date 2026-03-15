@@ -12,8 +12,8 @@ import { Generador } from './components/Generador';
 import { ConstructorFrases } from './components/ConstructorFrases';
 import { Oraculo } from './components/Oraculo';
 
-// Configuración de nuestro backend local Mistral 
-const LOCAL_API = import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:3002/api';
+// Configuración de nuestro backend (Mistral local o Vercel Serverless)
+const LOCAL_API = import.meta.env.PROD ? '/api' : (import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:3002/api');
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');

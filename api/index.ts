@@ -170,7 +170,11 @@ app.get('/api/status', async (_req, res) => {
 });
 
 const PORT = process.env.PORT || 3002;
-createServer(app).listen(PORT, () => {
-  console.log(`🏛️  Huchití OS Backend — escuchando en puerto ${PORT}`);
-  console.log(`✨ Proveedor: ${GENAI_API_KEY ? 'Gemini (Online)' : 'Mistral (Local Fallback)'}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  createServer(app).listen(PORT, () => {
+    console.log(`🏛️  Huchití OS Backend — escuchando en puerto ${PORT}`);
+    console.log(`✨ Proveedor: ${GENAI_API_KEY ? 'Gemini (Online)' : 'Mistral (Local Fallback)'}`);
+  });
+}
+
+export default app;
