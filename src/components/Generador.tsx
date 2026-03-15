@@ -1,8 +1,6 @@
 import React, { useRef } from 'react';
 import { Loader2 } from 'lucide-react';
-
-
-interface GeneradorProps {
+import { motion, useScroll, useTransform } from 'motion/react';interface GeneradorProps {
   imagenPrompt: string;
   setImagenPrompt: (val: string) => void;
   generateImage: () => void;
