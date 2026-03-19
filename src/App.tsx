@@ -116,12 +116,12 @@ export default function App() {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-MX';
-    utterance.rate = 0.85; // Voz pausada 
-    utterance.pitch = 0.8;
+    utterance.rate = 0.7; // Más rítmico
+    utterance.pitch = 0.5; // Voz más grave (ancestral)
     
-    // Intentar buscar una voz grave/específica
     const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find(v => v.name.includes(voiceNamePattern) && v.lang.includes('es')) 
+    // Priorizar voces graves o con "Sabina" (si existe)
+    const voice = voices.find(v => (v.name.includes('Male') || v.name.includes('Google español')) && v.lang.includes('es'))
                || voices.find(v => v.lang.includes('es'));
     if (voice) utterance.voice = voice;
 

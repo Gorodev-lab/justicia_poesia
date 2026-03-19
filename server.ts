@@ -1,14 +1,32 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 
-// --- Configuración de modelos (Soberanía Local) ---
-// Huchití OS opera ahora exclusivamente bajo infraestructura local para garantizar
-// la privacidad y la neopermanencia sin dependencia de nubes externas.
-const MISTRAL_BASE_URL = 'http://localhost:8001/v1';
-const MODEL_ID = '/home/gorops/models/Mistral-7B-Instruct-v0.3-Q4_K_M.gguf';
+// ═══════════════════════════════════════════════════════════════
+//  HUCHITÍ OS — Servidor de Desarrollo Local
+//  Motor de IA: Google Gemini (gemini-2.0-flash)
+// ═══════════════════════════════════════════════════════════════
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+
+// Helper: llama a Gemini con un sistema + prompt
+async function callGemini(systemPrompt: string, userPrompt: string, temperature = 0.7): Promise<string> {
+  if (!GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY no configurada. Revisa tu archivo .env.local');
+  }
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.0-flash',
+    systemInstruction: systemPrompt,
+    generationConfig: { temperature },
+  });
+  const result = await model.generateContent(userPrompt);
+  return result.response.text();
+}
 
 // CORS para el frontend Vite
 app.use((req, res, next) => {
@@ -19,46 +37,17 @@ app.use((req, res, next) => {
   next();
 });
 
-// --- Helper: Motor de Inferencia Local ---
-async function callAI(messages: { role: string; content: string }[], options: any = {}) {
-  const body = {
-    model: MODEL_ID,
-    messages,
-    max_tokens: options.max_tokens ?? 1024,
-    temperature: options.temperature ?? 0.7,
-    ...(options.response_format ? { response_format: options.response_format } : {}),
-  };
-
-  const response = await fetch(`${MISTRAL_BASE_URL}/chat/completions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Local Neural Engine Error: ${response.status} (Asegúrate de que Mistral esté corriendo en :8001)`);
-  }
-  const data = await response.json() as any;
-  return data.choices[0].message.content as string;
-}
-
 // ====================================================
 // ENDPOINT 1: Explicar vocablo huchití
 // ====================================================
 app.post('/api/explain', async (req, res) => {
   const { vocablo, significado } = req.body;
   try {
-    const messages = [
-      {
-        role: 'system',
-        content: 'Eres un experto en Lingüística de Resurrección y Justicia Filosófica. Respondes en español de forma concisa, educativa y respetuosa sobre la cultura huchití de Baja California Sur.'
-      },
-      {
-        role: 'user',
-        content: `Explica el contexto del término "${vocablo}" (${significado}) basado en los documentos de revitalización huchití. Menciona aspectos como la neopermanencia cultural en Baja California Sur, el sistema tetravocálico (a, e, i, u) o la gramática SOV si es relevante. Sé conciso, educativo y respeta la memoria del pueblo huchití/uchití. Máximo 3 párrafos.`
-      }
-    ];
-    const text = await callAI(messages, { max_tokens: 512, temperature: 0.7 });
+    const text = await callGemini(
+      'Eres un experto en Lingüística de Resurrección y Justicia Filosófica. Respondes en español de forma concisa, educativa y respetuosa sobre la cultura huchití de Baja California Sur.',
+      `Explica el contexto del término "${vocablo}" (${significado}) basado en los documentos de revitalización huchití. Menciona aspectos como la neopermanencia cultural en Baja California Sur, el sistema tetravocálico (a, e, i, u) o la gramática SOV si es relevante. Sé conciso, educativo y respeta la memoria del pueblo huchití/uchití. Máximo 3 párrafos.`,
+      0.7
+    );
     res.json({ text });
   } catch (e: any) {
     console.error('[/api/explain]', e.message);
@@ -67,19 +56,14 @@ app.post('/api/explain', async (req, res) => {
 });
 
 // ====================================================
-// ENDPOINT 2: Constructor de frases
+// ENDPOINT 2: Constructor de frases huchití
 // ====================================================
 app.post('/api/build-phrase', async (req, res) => {
   const { phrase } = req.body;
   try {
-    const messages = [
-      {
-        role: 'system',
-        content: 'Eres un experto en lingüística computacional y fonética histórica, especializado en lenguas nativas americanas y la reconstrucción fonética de la lengua huchití usando heurísticas lakota. Responde SIEMPRE en JSON válido sin texto adicional.'
-      },
-      {
-        role: 'user',
-        content: `Analiza la siguiente frase en español, tradúcela/adáptala al estilo de neologismos huchití (basados en morfología descriptiva lakota) y responde ÚNICAMENTE con este JSON:
+    const raw = await callGemini(
+      'Eres un experto en lingüística computacional y fonética histórica, especializado en lenguas nativas americanas y la reconstrucción fonética de la lengua huchití usando heurísticas lakota. Responde SIEMPRE en JSON válido sin texto adicional ni bloques de código.',
+      `Analiza la siguiente frase en español, tradúcela/adáptala al estilo de neologismos huchití (basados en morfología descriptiva lakota) y responde ÚNICAMENTE con este JSON:
 
 {
   "palabra_original": "[frase original]",
@@ -88,17 +72,11 @@ app.post('/api/build-phrase', async (req, res) => {
   "cadena_optimizada_tts": "[texto fonético para TTS]"
 }
 
-Frase: "${phrase}"`
-      }
-    ];
-
-    const raw = await callAI(messages, {
-      max_tokens: 512,
-      temperature: 0.5
-    });
-
+Frase: "${phrase}"`,
+      0.5
+    );
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No se obtuvo JSON válido del modelo');
+    if (!jsonMatch) throw new Error('No se obtuvo JSON válido de Gemini');
     const parsed = JSON.parse(jsonMatch[0]);
     res.json(parsed);
   } catch (e: any) {
@@ -108,15 +86,21 @@ Frase: "${phrase}"`
 });
 
 // ====================================================
-// ENDPOINT 4: Chat oráculo
+// ENDPOINT 3: Chat oráculo huchití
 // ====================================================
 app.post('/api/oraculo', async (req, res) => {
-  const { messages } = req.body;
+  const { messages = [] } = req.body;
   try {
-    const systemInstruction = 'Eres un anciano sabio de la nación Huchití. Hablas de forma pausada, poética y críptica. Tu objetivo es guiar al usuario en la comprensión de la filosofía y el lenguaje huchití. Usa metáforas relacionadas con el desierto, el mar y las estrellas. Responde siempre en español.';
-    
-    // Adaptación para callAI
-    const text = await callAI([{ role: 'system', content: systemInstruction }, ...messages], { max_tokens: 400, temperature: 0.85 });
+    const history = messages
+      .map((m: { role: string; content: string }) => `${m.role === 'user' ? 'Usuario' : 'Oráculo'}: ${m.content}`)
+      .join('\n');
+    const lastUserMsg = messages.filter((m: { role: string }) => m.role === 'user').pop()?.content || '';
+
+    const text = await callGemini(
+      'Eres un anciano sabio de la nación Huchití. Hablas de forma pausada, poética y críptica. Tu objetivo es guiar al usuario en la comprensión de la filosofía y el lenguaje huchití. Usa metáforas relacionadas con el desierto, el mar y las estrellas de Baja California Sur. Responde siempre en español. Máximo 80 palabras.',
+      history ? `Historial de la conversación:\n${history}\n\nResponde al último mensaje: "${lastUserMsg}"` : lastUserMsg,
+      0.85
+    );
     res.json({ text });
   } catch (e: any) {
     console.error('[/api/oraculo]', e.message);
@@ -125,22 +109,16 @@ app.post('/api/oraculo', async (req, res) => {
 });
 
 // ====================================================
-// ENDPOINT 5: Generador de descripción de imagen
+// ENDPOINT 4: Generador de descripción de imagen (arte rupestre)
 // ====================================================
 app.post('/api/describe-image', async (req, res) => {
   const { prompt } = req.body;
   try {
-    const messages = [
-      {
-        role: 'system',
-        content: 'Eres un artista especializado en arte rupestre y pinturas ancestrales huchití con pigmentos minerales. Describes visiones con detalle poético y arqueológico.'
-      },
-      {
-        role: 'user',
-        content: `Describe con detalle visual lo que representaría esta imagen en estilo de pintura rupestre con pigmentos minerales, trazos orgánicos sobre piedra: "${prompt}". Incluye colores, formas, símbolos y composición. Máximo 200 palabras.`
-      }
-    ];
-    const text = await callAI(messages, { max_tokens: 350, temperature: 0.8 });
+    const text = await callGemini(
+      'Eres un artista especializado en arte rupestre y pinturas ancestrales huchití con pigmentos minerales. Describes visiones con detalle poético y arqueológico.',
+      `Describe con detalle visual lo que representaría esta imagen en estilo de pintura rupestre con pigmentos minerales, trazos orgánicos sobre piedra: "${prompt}". Incluye colores, formas, símbolos y composición. Máximo 200 palabras.`,
+      0.8
+    );
     res.json({ text });
   } catch (e: any) {
     console.error('[/api/describe-image]', e.message);
@@ -148,12 +126,20 @@ app.post('/api/describe-image', async (req, res) => {
   }
 });
 
+// ====================================================
+// ENDPOINT 5: Status
+// ====================================================
 app.get('/api/status', async (_req, res) => {
-  res.json({ ok: true, engine: 'Mistral-7B (Local)' });
+  res.json({
+    ok: true,
+    engine: 'Gemini 2.0 Flash (Local Dev Server)',
+    gemini: GEMINI_API_KEY ? 'configured' : 'missing',
+  });
 });
 
 const PORT = process.env.PORT || 3002;
 createServer(app).listen(PORT, () => {
   console.log(`🏛️  Huchití OS Backend — escuchando en puerto ${PORT}`);
-  console.log(`✨ Arquitectura: Soberanía de Datos (Infraestructura Local)`);
+  console.log(`✨ Motor de IA: Google Gemini 2.0 Flash`);
+  console.log(`🔑 API Key: ${GEMINI_API_KEY ? '✅ Configurada' : '❌ FALTANTE — revisa .env.local'}`);
 });
