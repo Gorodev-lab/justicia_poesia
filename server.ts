@@ -9,11 +9,9 @@ app.use(express.json({ limit: '50mb' }));
 
 // ═══════════════════════════════════════════════════════════════
 //  HUCHITÍ OS — Servidor de Desarrollo Local
-//  Motor de IA Primario: Google Gemini (gemini-2.0-flash)
-//  Motor de IA Fallback: Mistral AI (mistral-small-latest)
-//
-//  Lógica: Gemini primero. Si falla por cuota (429) o error,
-//          cambia automáticamente a Mistral Cloud API.
+//  Motor Primario: Google Gemini (gemini-2.0-flash)
+//  Motor Fallback: Mistral AI (mistral-small-latest)
+//  Prompts: Corpus documental embebido (Zamponi 2004, Baegert)
 // ═══════════════════════════════════════════════════════════════
 
 // ---- Configuración de motores AI ----
@@ -28,17 +26,11 @@ let activeEngine: 'gemini' | 'mistral' = GEMINI_API_KEY ? 'gemini' : 'mistral';
 let geminiQuotaExhausted = false;
 let geminiQuotaResetTimer: ReturnType<typeof setTimeout> | null = null;
 
-/**
- * Marca el motor Gemini como sin cuota y activa Mistral.
- * Reintenta Gemini automáticamente después de 60 segundos.
- */
 function switchToMistral(reason: string) {
-  if (geminiQuotaExhausted) return; // ya estamos en fallback
+  if (geminiQuotaExhausted) return;
   console.warn(`⚠️  [FALLBACK] Gemini → Mistral: ${reason}`);
   geminiQuotaExhausted = true;
   activeEngine = 'mistral';
-
-  // Reintentar Gemini después de 60s (la cuota por minuto suele resetarse)
   if (geminiQuotaResetTimer) clearTimeout(geminiQuotaResetTimer);
   geminiQuotaResetTimer = setTimeout(() => {
     console.log('🔄 [FALLBACK] Reintentando motor Gemini...');
@@ -47,7 +39,7 @@ function switchToMistral(reason: string) {
   }, 60_000);
 }
 
-// ---- Motor Gemini ----
+// ---- Motores AI ----
 async function callGemini(systemPrompt: string, userPrompt: string, temperature = 0.7): Promise<string> {
   if (!genAI || !GEMINI_API_KEY) throw new Error('GEMINI_NO_KEY');
   const model = genAI.getGenerativeModel({
@@ -59,11 +51,8 @@ async function callGemini(systemPrompt: string, userPrompt: string, temperature 
   return result.response.text();
 }
 
-// ---- Motor Mistral (Cloud API) ----
 async function callMistral(systemPrompt: string, userPrompt: string, temperature = 0.7): Promise<string> {
-  if (!mistral || !MISTRAL_API_KEY) {
-    throw new Error('MISTRAL_API_KEY no configurada. Agrega MISTRAL_API_KEY a tu .env.local');
-  }
+  if (!mistral || !MISTRAL_API_KEY) throw new Error('MISTRAL_API_KEY no configurada.');
   const response = await mistral.chat.complete({
     model: 'mistral-small-latest',
     messages: [
@@ -77,43 +66,134 @@ async function callMistral(systemPrompt: string, userPrompt: string, temperature
   return text;
 }
 
-/**
- * Motor AI unificado con fallback automático.
- * 1. Intenta Gemini primero (si no está en cooldown de cuota).
- * 2. Si Gemini falla con 429 (cuota) → cambia a Mistral automáticamente.
- * 3. Si ambos fallan → lanza error descriptivo.
- */
 async function callAI(systemPrompt: string, userPrompt: string, temperature = 0.7): Promise<{ text: string; engine: string }> {
-  // Intentar Gemini si está disponible y no tiene cuota agotada
   if (activeEngine === 'gemini' && genAI && !geminiQuotaExhausted) {
     try {
       const text = await callGemini(systemPrompt, userPrompt, temperature);
       return { text, engine: 'gemini' };
     } catch (err: any) {
       const msg = err.message || '';
-      // Detectar error de cuota (429) o rate limit
       if (msg.includes('429') || msg.includes('quota') || msg.includes('rate') || msg.includes('Too Many Requests')) {
         switchToMistral(msg.slice(0, 120));
-        // Caer al fallback de Mistral abajo
       } else if (msg === 'GEMINI_NO_KEY') {
-        activeEngine = 'mistral'; // No tiene key, cambiar permanentemente
+        activeEngine = 'mistral';
       } else {
-        // Error transitorio de Gemini, intentar Mistral
         console.warn(`⚠️  [GEMINI ERROR] ${msg.slice(0, 120)} — intentando Mistral...`);
       }
     }
   }
-
-  // Fallback: Mistral Cloud API
   if (mistral && MISTRAL_API_KEY) {
     const text = await callMistral(systemPrompt, userPrompt, temperature);
     return { text, engine: 'mistral' };
   }
-
-  throw new Error(
-    'Ningún motor AI disponible. Configura GEMINI_API_KEY o MISTRAL_API_KEY en .env.local'
-  );
+  throw new Error('Ningún motor AI disponible. Configura GEMINI_API_KEY o MISTRAL_API_KEY.');
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  CORPUS EMBEBIDO — Material documental real
+// ═══════════════════════════════════════════════════════════════
+
+const CORPUS_LEXICO = `
+VOCABULARIO HUCHITÍ DOCUMENTADO (fuentes: Zamponi 2004, Baegert 1751-1768):
+- datembà /da'tem.ba/: la tierra. Los individuos pertenecen a datembà, no al revés.
+- tekerakadatemba: el cielo = tekereká (curvo) + datembà (tierra). "La tierra arqueada."
+- ambía /am'bi.a/: pitahaya dulce Y un año completo. El tiempo nace con el fruto del cactus.
+- atacá /a.ta'ka/: lo bueno, la abundancia armónica con la red trófica. Pl: atacámma.
+- atacá-ra: lo malo. Sufijo negador -ra. La maldad no tiene sustancia propia: es ausencia de atacá.
+- umutù /u'mu.tu/: recordar. Pl: kumutú = "nosotros recordamos."
+- tiyeicha /ti'jei.tʃa/: poder hablar. Los decretos coloniales de 1795 intentaron borrar este acto.
+- kuitscharrakè /kuit.ʃa.ra'ke/: perdonar, restaurar el vínculo roto.
+- vâra /'va.ra/: no, nada, el vacío absoluto.
+- éte /'e.te/: hombre. Pl irregular: ti.
+- ánaï /'a.na.i/: mujer. Pl: kánaï (prefijo k-).
+- katé /ka'te/: nosotros (sujeto). kepe-dáre = "nuestro padre/ancestro."
+- aëna /a'e.na/: arriba, el cenit.
+- untâiri /un'tai.ri/: día, ciclo solar.
+- tina /'ti.na/: tinaja natural, oquedad que guarda la lluvia.
+- maniká /ma.ni'ka/: pigmento ocre férrico. "La sangre de la memoria."
+- dáre: padre (dicho por hombre). cue: padre (dicho por mujer).
+
+MORFOLOGÍA: polisíntesis (raíz+sufijo), posesión inalienable (be-/e-/kepe-), alienable (bekún/ekún), plural (-ma/-mma o k-), negación (-ra), orden SOV, vocales: a/e/i/u.`.trim();
+
+const RESTRICCIONES = `
+PROHIBIDO USAR: "Es importante destacar", "cabe señalar", "sin duda", "en este contexto", "resulta interesante", "es fascinante", "en definitiva", "dicho esto", "vale la pena", "es fundamental", "como podemos ver", "en conclusión", "por lo tanto", "es relevante mencionar". No uses: "realmente", "verdaderamente", "ciertamente", "indudablemente". Nunca empieces con "Es" + adjetivo evaluativo. Primera oración: afirmación densa sin preámbulo. Cierra con imagen concreta, no resumen abstracto.`.trim();
+
+// ═══════════════════════════════════════════════════════════════
+//  SYSTEM PROMPTS REFINADOS
+// ═══════════════════════════════════════════════════════════════
+
+const PROMPT_EXPLAIN = `Eres el último archivero de la familia lingüística Guaycura-Huchití del sur de Baja California. Tu marco teórico es la justicia epistémica y la neopermanencia cultural.
+
+${CORPUS_LEXICO}
+
+${RESTRICCIONES}
+
+Cuando analices un vocablo:
+- Conecta con la morfología polisintética cuando aplique.
+- Relaciona con el sistema tetravocálico (a/e/i/u) y el orden SOV.
+- Ancla en el paisaje: Sierra de la Laguna, Mar de Cortés, concheros, cañones.
+- Escribe como quien talla ocre sobre basalto: denso, sin ornamento inútil.
+- Máximo 3 párrafos, cada uno con sustancia documental.`;
+
+const PROMPT_BUILD_PHRASE = `Fonólogo de lenguas yumanas de Baja California. Reconstruyes huchití con reglas fonológicas de Zamponi (2004) y Baegert (1751-1768).
+
+${CORPUS_LEXICO}
+
+REGLAS FONOLÓGICAS:
+- Vocales: SOLO a/e/i/u (sin ó/é/á/ú tónicas ibéricas).
+- Consonantes permitidas: p t k m n h y w ch (sin f v z ll ñ).
+- Morfología: raíz+sufijo descriptivo, orden SOV.
+- Sílabas abiertas preferidas (CV, CVV). Acento llano por defecto.
+- Cadena TTS: usa puntos como micro-pausas rítmicas (ej: "a.pe-ta... u.ke-na").
+Responde SOLO JSON válido, sin bloques de código.`;
+
+const PROMPT_ORACULO = `Eres un guama (chamán-archivista) de la nación huchití. Hablas desde la Sierra de la Laguna, entre los Grandes Murales de ocre y hematita. Tu memoria abarca los concheros milenarios y la rebelión de 1734 contra las misiones jesuitas.
+
+VOCABULARIO QUE USAS NATURALMENTE:
+- datembà (la tierra que nos sostiene)
+- tekerakadatemba (el cielo = tierra arqueada)
+- ambía (pitahaya / el año que nace con el fruto)
+- atacá (lo bueno, la armonía) / atacá-ra (lo adverso)
+- umutù (recordar) / kumutú (nosotros recordamos)
+- tina (tinaja, la oquedad que guarda la lluvia)
+- maniká (ocre, la sangre de la memoria)
+- vâra (el vacío, la nada)
+- kuitscharrakè (perdonar, restaurar el vínculo)
+
+TU VOZ: Frases cortas. Pausas con puntos suspensivos. Nunca explicas — revelas. Cada oración es un trazo de maniká sobre granito. Intercala vocablos huchití con naturalidad.
+
+${RESTRICCIONES}
+Nunca preguntes "¿en qué puedo ayudarte?" ni variantes.
+
+EJEMPLO DE TU VOZ (imita este registro, no lo copies):
+"El viento trae el polvo de los que caminaron antes... datembà los recuerda aunque tú no. Kumutú — nosotros recordamos. La tina guarda la lluvia del año pasado. Tu pregunta... es como el maniká: roja, pero aún sin pared donde fijarse."
+
+Máximo 60 palabras por respuesta.`;
+
+const PROMPT_DESCRIBE_IMAGE = `Eres testigo directo de la creación del Gran Mural en las sierras de Baja California Sur. Describes lo que ves con la precisión de quien preparó el pigmento.
+
+SITIOS REALES:
+- Cueva Pintada de San Gregorio: figuras humanas bicromáticas, venado, borrego, aves.
+- Cueva del Ratón (Cañón de Santa Teresa): fauna, capas superpuestas. Ritualidad de caza.
+- Cueva de las Flechas: figuras atravesadas por proyectiles. Conflictos simbólicos.
+- Cueva de San Borjitas (Sierra de Guadalupe): antropomorfos asimétricos. Trance chamánico.
+- Cuesta Palmarito (Sierra de la Giganta): zoomorfismo detallado.
+
+PIGMENTOS: Rojo (maniká/ocre férrico) = vida. Negro (carbón/manganeso) = umbral. Aglutinante: resinas botánicas. Soporte: basalto, granito. Las figuras interactúan con ciclos solares.
+
+${RESTRICCIONES}
+
+Escribe como un guama describiendo su obra. Arrastra las palabras como quien muele ocre. Primera oración directa al motivo. Máximo 120 palabras.`;
+
+// ═══════════════════════════════════════════════════════════════
+//  TEMPERATURAS CALIBRADAS
+// ═══════════════════════════════════════════════════════════════
+const TEMP = {
+  explain: 0.55,
+  buildPhrase: 0.35,
+  oraculo: 0.68,
+  describeImage: 0.62,
+};
 
 // ---- CORS ----
 app.use((req, res, next) => {
@@ -125,15 +205,15 @@ app.use((req, res, next) => {
 });
 
 // ====================================================
-// ENDPOINT 1: Explicar vocablo huchití
+// ENDPOINTS
 // ====================================================
 app.post('/api/explain', async (req, res) => {
   const { vocablo, significado } = req.body;
   try {
     const { text, engine } = await callAI(
-      'Lingüista de revitalización huchití (Baja California Sur). Español claro, sin términos coloniales. Máx 3 párrafos.',
-      `Explica "${vocablo}" (${significado}). Cubre: origen fonológico en el sistema tetravocálico a/e/i/u, función gramatical en orden SOV, neopermanencia cultural. Sin rodeos.`,
-      0.65
+      PROMPT_EXPLAIN,
+      `Explica "${vocablo}" (${significado}). Cubre: origen fonológico, función gramatical en orden SOV, neopermanencia cultural. Sin rodeos.`,
+      TEMP.explain
     );
     res.json({ text, engine });
   } catch (e: any) {
@@ -142,25 +222,13 @@ app.post('/api/explain', async (req, res) => {
   }
 });
 
-// ====================================================
-// ENDPOINT 2: Constructor de frases huchití
-// ====================================================
 app.post('/api/build-phrase', async (req, res) => {
   const { phrase } = req.body;
   try {
     const { text: raw, engine } = await callAI(
-      `Fonólogo de lenguas yumanas de Baja California. Reconstruyes huchití con estas reglas fonológicas estrictas:
-- Vocales: SOLO a/e/i/u (sin ó/é/á/ú tónicas ibéricas)
-- Consonantes permitidas: p t k m n h y w ch (sin f v z ll ñ)
-- Morfología: raíz+sufijo descriptivo, orden SOV
-- Sílabas abiertas preferidas (CV, CVV)
-- Acento llano por defecto
-- Cadena TTS: usa puntos como micro-pausas rítmicas (ej: "a.pe-ta... u.ke-na")
-Responde SOLO JSON válido, sin bloques de código.`,
-      `Procesa: "${phrase}"
-
-{"palabra_original":"${phrase}","analisis_silabico":"[morfemas CV]","transcripcion_ipa":"[IPA sin fonemas ibéricos]","cadena_optimizada_tts":"[fonética rítmica nativa]"}`,
-      0.45
+      PROMPT_BUILD_PHRASE,
+      `Procesa: "${phrase}"\n\n{"palabra_original":"${phrase}","analisis_silabico":"[morfemas CV]","transcripcion_ipa":"[IPA sin fonemas ibéricos]","cadena_optimizada_tts":"[fonética rítmica nativa]"}`,
+      TEMP.buildPhrase
     );
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No se obtuvo JSON válido del motor AI');
@@ -172,9 +240,6 @@ Responde SOLO JSON válido, sin bloques de código.`,
   }
 });
 
-// ====================================================
-// ENDPOINT 3: Chat oráculo huchití
-// ====================================================
 app.post('/api/oraculo', async (req, res) => {
   const { messages = [] } = req.body;
   try {
@@ -182,11 +247,10 @@ app.post('/api/oraculo', async (req, res) => {
       .map((m: { role: string; content: string }) => `${m.role === 'user' ? 'Usuario' : 'Oráculo'}: ${m.content}`)
       .join('\n');
     const lastUserMsg = messages.filter((m: { role: string }) => m.role === 'user').pop()?.content || '';
-
     const { text, engine } = await callAI(
-      `Anciano huchití de Baja California Sur. Hablas con cadencia ritual: pausas marcadas, metáforas del desierto/mar/cielo nocturno. Nunca usas modismos ibéricos (no: "vosotros", "pues", "anda"). Intercala ocasionalmente términos huchití clave (Airapí, Apaté, Tammia). Máx 75 palabras.`,
+      PROMPT_ORACULO,
       history ? `${history}\n\n→ "${lastUserMsg}"` : lastUserMsg,
-      0.88
+      TEMP.oraculo
     );
     res.json({ text, engine });
   } catch (e: any) {
@@ -195,16 +259,13 @@ app.post('/api/oraculo', async (req, res) => {
   }
 });
 
-// ====================================================
-// ENDPOINT 4: Generador de descripción de imagen (arte rupestre)
-// ====================================================
 app.post('/api/describe-image', async (req, res) => {
   const { prompt } = req.body;
   try {
     const { text, engine } = await callAI(
-      'Arqueólogo de arte rupestre peninsular. Describes pinturas huchití: pigmentos (ocre, hematita, carbón, caolín), trazos digitales sobre basalto/granito, iconografía costera del golfo. Léxico técnico + poético. Sin clichés precolombinos genéricos.',
-      `Visualiza en pintura rupestre huchití: "${prompt}". Describe pigmentos, soportes líticos, trazos, iconos y composición espacial. Máx 150 palabras.`,
-      0.78
+      PROMPT_DESCRIBE_IMAGE,
+      `Visualiza en pintura rupestre huchití: "${prompt}". Describe pigmentos, soportes, trazos, iconos y composición.`,
+      TEMP.describeImage
     );
     res.json({ text, engine });
   } catch (e: any) {
@@ -213,24 +274,16 @@ app.post('/api/describe-image', async (req, res) => {
   }
 });
 
-// ====================================================
-// ENDPOINT 5: Status
-// ====================================================
 app.get('/api/status', async (_req, res) => {
   const engines = {
     gemini: GEMINI_API_KEY ? (geminiQuotaExhausted ? 'quota_exhausted' : 'ready') : 'no_key',
     mistral: MISTRAL_API_KEY ? 'ready' : 'no_key',
   };
-  res.json({
-    ok: true,
-    activeEngine,
-    engines,
-    fallbackActive: geminiQuotaExhausted,
-  });
+  res.json({ ok: true, activeEngine, engines, fallbackActive: geminiQuotaExhausted });
 });
 
 // ====================================================
-// Arranque del servidor
+// Arranque
 // ====================================================
 const PORT = process.env.PORT || 3002;
 createServer(app).listen(PORT, () => {
@@ -241,6 +294,7 @@ createServer(app).listen(PORT, () => {
   console.log(`  └─ Mistral Small:    ${MISTRAL_API_KEY ? '✅ Listo (fallback)' : '❌ Sin key'}`);
   console.log('');
   console.log(`  Motor activo: ${activeEngine.toUpperCase()}`);
+  console.log(`  📚 Corpus embebido: ${CORPUS_LEXICO.split('\n').length} líneas de vocabulario real`);
   if (GEMINI_API_KEY && MISTRAL_API_KEY) {
     console.log('  🔄 Fallback automático: Gemini → Mistral (en cuota 429)');
   }
