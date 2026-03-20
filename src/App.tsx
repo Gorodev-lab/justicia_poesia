@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Loader2, Moon, Sun, Terminal, LogIn, LogOut, Music } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Minijuego from './components/Minijuego';
@@ -11,9 +11,13 @@ import { VocabloCard } from './components/VocabloCard';
 import { Generador } from './components/Generador';
 import { ConstructorFrases } from './components/ConstructorFrases';
 import { Oraculo } from './components/Oraculo';
-
-// Configuración de nuestro backend (Mistral local o Vercel Serverless)
-const LOCAL_API = import.meta.env.PROD ? '/api' : (import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:3002/api');
+import {
+  checkApiStatus,
+  explainVocablo,
+  buildHuchitiPhrase,
+  consultarOraculo,
+  describeImage,
+} from './lib/gemini';
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,6 +57,16 @@ export default function App() {
   const [imagenLoading, setImagenLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isApiHealthy, setIsApiHealthy] = useState(true);
+
+  // 0. Verificar estado del backend AI al arrancar
+  useEffect(() => {
+    checkApiStatus()
+      .then(status => {
+        const hasAnyEngine = Object.values(status.engines || {}).some(v => v === 'ready');
+        setIsApiHealthy(status.ok && hasAnyEngine);
+      })
+      .catch(() => setIsApiHealthy(false));
+  }, []);
 
   // 1. Supabase Auth Listener
   useEffect(() => {
@@ -153,7 +167,7 @@ export default function App() {
     setLiveTranscript(prev => [...prev, "[SISTEMA]: Conexión terminada."]);
   };
 
-  // Función temporal simula enviar un texto al oráculo (deberá implementarse input de texto en Oraculo.tsx)
+  // Envía un mensaje al Oráculo Huchití (chat conversacional con Gemini)
   const sendToOraculo = async (text: string) => {
     const newMessage = { role: 'user', content: text };
     const newContext = [...oraculoMessages, newMessage];
@@ -161,38 +175,29 @@ export default function App() {
     setLiveTranscript(prev => [...prev, `[TÚ]: ${text}`]);
 
     try {
-      const res = await fetch(`${LOCAL_API}/oraculo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newContext })
-      });
-      const data = await res.json();
+      const responseText = await consultarOraculo(newContext);
       
-      setOraculoMessages(prev => [...prev, { role: 'assistant', content: data.text }]);
-      setLiveTranscript(prev => [...prev, `[ORÁCULO]: ${data.text}`]);
+      setOraculoMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
+      setLiveTranscript(prev => [...prev, `[ORÁCULO]: ${responseText}`]);
       
-      // Auto leer respuesta
-      speakText(data.text, 'Google', () => {}, () => {});
-    } catch (e) {
-      console.error(e);
-      setLiveTranscript(prev => [...prev, "[SISTEMA]: Error de cognición local."]);
+      // Auto leer respuesta del Oráculo
+      speakText(responseText, 'Google', () => {}, () => {});
+    } catch (e: any) {
+      console.error('[sendToOraculo]', e.message);
+      setLiveTranscript(prev => [...prev, `[SISTEMA]: Error de cognición — ${e.message}`]);
     }
   };
 
-  // ---- Generador y Explicador (Llamadas a Proxy) ----
+  // ---- Generador y Explicador (via cliente AI centralizado) ----
   const explainContext = async (item: Vocablo) => {
     setLoadingId(item.id);
     try {
-      const res = await fetch(`${LOCAL_API}/explain`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vocablo: item.vocablo, significado: item.significado })
-      });
-      const data = await res.json();
-      setExplanation(prev => ({ ...prev, [item.id]: data.text }));
-    } catch (error) {
-      console.error(error);
+      const text = await explainVocablo(item.vocablo, item.significado);
+      setExplanation(prev => ({ ...prev, [item.id]: text }));
+    } catch (error: any) {
+      console.error('[explainContext]', error.message);
       setIsApiHealthy(false);
+      setExplanation(prev => ({ ...prev, [item.id]: `[ERROR] ${error.message}` }));
     } finally {
       setLoadingId(null);
     }
@@ -202,12 +207,7 @@ export default function App() {
     if (!phraseInput) return;
     setIsPhraseLoading(true);
     try {
-      const res = await fetch(`${LOCAL_API}/build-phrase`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phrase: phraseInput })
-      });
-      const jsonResponse = await res.json();
+      const jsonResponse = await buildHuchitiPhrase(phraseInput);
       
       const formattedResult = `[ ANÁLISIS MORFOLÓGICO ]\nOriginal: ${jsonResponse.palabra_original}\n\n[ SÍNTESIS HUCHITÍ ]\nComposición: ${jsonResponse.analisis_silabico}\nIPA: /${jsonResponse.transcripcion_ipa}/\n\n[ CADENA TTS ]\n${jsonResponse.cadena_optimizada_tts}`;
       
@@ -225,9 +225,9 @@ export default function App() {
           tts_text: jsonResponse.cadena_optimizada_tts || ''
         });
       }
-    } catch (error) {
-      console.error(error);
-      setPhraseResult("[ERROR] Fallo en la sinapsis del motor morfológico.");
+    } catch (error: any) {
+      console.error('[buildPhrase]', error.message);
+      setPhraseResult(`[ERROR] Fallo en la sinapsis del motor morfológico: ${error.message}`);
     } finally {
       setIsPhraseLoading(false);
     }
@@ -256,43 +256,34 @@ export default function App() {
     }
   };
 
-  // Reconvertidos de Veo e Imagen a Descripciones
+  // Generador de arte conceptual (descripción rupestre con Gemini)
   const generateImage = async () => {
     if (!imagenPrompt) return;
     setImagenLoading(true);
     try {
-      const res = await fetch(`${LOCAL_API}/describe-image`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: imagenPrompt })
-      });
-      const data = await res.json();
-      setImagenResult(`[Visión Sintética Generada]:\n\n${data.text}`);
-    } catch (error) {
-      console.error(error);
+      const text = await describeImage(imagenPrompt);
+      setImagenResult(`[Visión Sintética Generada]:\n\n${text}`);
+    } catch (error: any) {
+      console.error('[generateImage]', error.message);
+      setImagenResult(`[ERROR] ${error.message}`);
     } finally {
       setImagenLoading(false);
     }
   };
 
   const generateVideo = async () => {
-    // Si hay archivo es Qwen2-VL, sino placeholder
     if (!veoPrompt && !selectedFile) return;
     setVeoLoading(true);
     try {
       if (selectedFile) {
         setVeoResult(`[Análisis Qwen-VL de Archivo]: Procesamiento simulado para rediseño sin acceso GPU directo... \n(En producción apuntar a puerto :8002)`);
       } else {
-        const res = await fetch(`${LOCAL_API}/describe-image`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: `Formato de Guion Audiovisual: ${veoPrompt}` })
-        });
-        const data = await res.json();
-        setVeoResult(`[Narrativa Audiovisual Generada]:\n\n${data.text}`);
+        const text = await describeImage(`Formato de Guion Audiovisual: ${veoPrompt}`);
+        setVeoResult(`[Narrativa Audiovisual Generada]:\n\n${text}`);
       }
-    } catch (error) {
-       console.error(error);
+    } catch (error: any) {
+      console.error('[generateVideo]', error.message);
+      setVeoResult(`[ERROR] ${error.message}`);
     } finally {
       setVeoLoading(false);
     }

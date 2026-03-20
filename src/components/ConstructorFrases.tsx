@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { Loader2, Mic, MicOff, PenTool, Volume2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SavedPhrase } from '../types';
-import { User } from 'firebase/auth';
+
+// Tipo mínimo de usuario compatible con Supabase Auth (sin depender de Firebase)
+interface SupabaseUser {
+  id: string;
+  email?: string;
+}
 
 interface ConstructorFrasesProps {
   phraseInput: string;
@@ -15,7 +20,7 @@ interface ConstructorFrasesProps {
   phraseTtsText: string | null;
   playPhraseAudio: (text: string) => void;
   playingPhraseText: string | null;
-  user: User | null;
+  user: SupabaseUser | null;
   savedPhrases: SavedPhrase[];
 }
 
