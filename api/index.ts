@@ -31,8 +31,14 @@ async function callMistral(sp: string, up: string, t = 0.7): Promise<string> {
 
 async function callAI(sp: string, up: string, t = 0.7): Promise<{ text: string; engine: string }> {
   if (genAI && GEMINI_API_KEY) {
-    try { return { text: await callGemini(sp, up, t), engine: 'gemini' }; }
-    catch (err: any) { console.warn(`[FALLBACK] ${(err.message || '').slice(0, 80)} → Mistral`); }
+    try { 
+      const text = await callGemini(sp, up, t);
+      return { text, engine: 'gemini' }; 
+    }
+    catch (err: any) { 
+      console.warn(`[GEMINI FAIL] ${(err.message || '').slice(0, 100)}`);
+      console.log("Activando Fallback a Mistral...");
+    }
   }
   if (mistral && MISTRAL_API_KEY) return { text: await callMistral(sp, up, t), engine: 'mistral' };
   throw new Error('Sin motor AI disponible.');
@@ -140,33 +146,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { text, engine } = await callAI(PROMPT_IMAGE,
         `Visualiza en pintura rupestre huchití: "${prompt}". Describe pigmentos, soportes, trazos, iconos.`, T.image);
       
-      // 2. Generar la imagen real usando Imagen 3
+      // 2. Generar la imagen real usando Imagen 3 (Opcional, solo si Gemini está activo)
       let imageBase64 = null;
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEMINI_API_KEY}`;
-        const imgRes = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            instances: [{ 
-              prompt: `Great Mural style cave painting from Baja California, prehistoric rock art, huchiti indigenous warrior, ochre and black charcoal pigments on rough basalt rock texture, primitive silhouettes, ancestral, spiritual, high resolution, dramatic lighting. ${text}` 
-            }],
-            parameters: { 
-              sampleCount: 1, 
-              aspectRatio: "16:9",
-              outputOptions: { mimeType: "image/jpeg" } 
-            }
-          })
-        });
+      if (engine === 'gemini') {
+          try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEMINI_API_KEY}`;
+            const imgRes = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                instances: [{ 
+                  prompt: `Prehistoric rock art painting on rough volcanic stone, huchiti tribal motifs, ochre and black charcoal pigments, deep texture, ancestral, dark spiritual atmosphere, high resolution. ${text}` 
+                }],
+                parameters: { sampleCount: 1, aspectRatio: "16:9", outputOptions: { mimeType: "image/jpeg" } }
+              })
+            });
 
-        if (imgRes.ok) {
-          const imgData = await imgRes.json();
-          imageBase64 = imgData.predictions?.[0]?.bytesBase64Encoded;
-        } else {
-          console.warn("[IMAGEN 3 ERROR]", await imgRes.text());
-        }
-      } catch (e: any) {
-        console.error("[IMAGEN 3 EXCEPTION]", e.message);
+            if (imgRes.ok) {
+              const imgData = await imgRes.json();
+              imageBase64 = imgData.predictions?.[0]?.bytesBase64Encoded;
+            } else {
+              const errBody = await imgRes.text();
+              console.error("[IMAGEN 3 STATUS]", imgRes.status, errBody);
+            }
+          } catch (e: any) {
+            console.error("[IMAGEN 3 EXCEPTION]", e.message);
+          }
       }
 
       return res.json({ text, engine, imageBase64 });
