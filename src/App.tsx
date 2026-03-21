@@ -316,7 +316,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen transition-colors duration-500 relative overflow-hidden">
+    <div className="min-h-screen transition-colors duration-500 relative overflow-x-hidden">
       <div className="grain-overlay" />
       
       {!isApiHealthy && (

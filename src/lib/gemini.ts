@@ -6,13 +6,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * URL base de la API según entorno.
- * - En producción (Vercel): usa /api (rutas serverless).
- * - En desarrollo local: usa VITE_LOCAL_API_URL o localhost:3002.
+ * URL base de la API ahora compatible y nativa con el Router de Next.js.
+ * Independientemente del entorno (Dev o Prod), la ruta es simple y uniforme.
  */
-export const API_BASE = import.meta.env.PROD
-  ? '/api'
-  : (import.meta.env.VITE_LOCAL_API_URL || 'http://localhost:3002/api');
+export const API_BASE = '/api';
 
 /**
  * Tipo base para las respuestas de texto del motor AI.

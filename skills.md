@@ -53,3 +53,70 @@ Contamos con dos API Keys integradas (Google Gemini y Mistral AI). Para llevar a
 ### En resumen:
 - **Mistral API**: Será el orquestador cognitivo principal, refinando prompts multimedia, manejando rápidamente toda la lógica abstracta SOV y sirviendo de guionista.
 - **Gemini 2.0 API**: Se utilizará estrictamente como el **Motor de Renderizado Multimodal** (generando el Audio crudo de la lengua, las fotos con _Imagen 3_ y las ráfagas visuales con _Veo 2_).
+
+## Implementación Técnica Directa (Con la llave actual de Gemini)
+
+Para ejecutar esta estrategia **con los recursos actuales en `api/index.ts`** sin necesidad de añadir licencias extra, reemplaza los flujos text-to-text actuales con los siguientes bloques arquitectónicos en las rutas `/api/describe-image` y `/api/build-phrase`:
+
+### A) Generación de Arte Rupestre (Imagen 3) vía HTTP Rest
+El SDK básico de Node de `@google/generative-ai` actualmente enfoca sus métodos directos a los modelos de chat (Flash/Pro). Para usar `Imagen-3` con tu misma llave API, debes ejecutar un `fetch` a la REST API de Google en el endpoint `/predict`:
+
+```typescript
+// Insertar en api/index.ts para usar con /api/describe-image
+async function generateImagen3(optimizedPrompt: string): Promise<string> {
+  const url = \`https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=\${process.env.GEMINI_API_KEY}\`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      instances: [{ prompt: optimizedPrompt }],
+      parameters: { 
+        sampleCount: 1, 
+        aspectRatio: "16:9", // Orientación dramática
+        outputOptions: { mimeType: "image/jpeg" } 
+      }
+    })
+  });
+  if (!response.ok) throw new Error("Fallo en Imagen 3");
+  const data = await response.json();
+  // Devuelve el base64 de la imagen que react mostrará como <img src="data:image/jpeg;base64,...">
+  return data.predictions[0].bytesBase64Encoded; 
+}
+```
+
+### B) Generación de Síntesis Uchití Auténtica (Audio Out)
+Con la llegada de `gemini-2.0-flash`, la API Text-to-Audio está nativamente embebida. Se sobreescribe la configuración para solicitar un objeto `inlineData` de tipo Audio en lugar de texto:
+
+```typescript
+// Insertar en api/index.ts para reemplazar el SpeechSynthesis (Navegador)
+async function generateNativeAudio(ttsReadyText: string): Promise<string> {
+  // Asegurarse de usar la versión soporte de audio, como gemini-2.0-flash
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    // Sobrecarga modal crucial para forzar la salida de voz
+    generationConfig: {
+      responseModalities: ["AUDIO"],
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            // Voces disponibles: Puck, Charon, Kore, Fenrir, Aoede
+            voiceName: "Charon" // Voz profunda, dramática, menos "ibérica"
+          }
+        }
+      }
+    }
+  });
+
+  const prompt = \`Pronuncia escrupulosamente esto como un canto ritual nómada: \${ttsReadyText}\`;
+  const result = await model.generateContent(prompt);
+  
+  // Extraemos la primera parte como PCM Base64 para el frontend
+  const candidate = result.response.candidates?.[0];
+  const audioPart = candidate?.content.parts.find(p => p.inlineData);
+  
+  if (!audioPart || !audioPart.inlineData) throw new Error("Audio no generado");
+  
+  // Devuelve la cadena base64 del audio PCM. React la reproduce con AudioContext o <audio>
+  return audioPart.inlineData.data;
+}
+```
