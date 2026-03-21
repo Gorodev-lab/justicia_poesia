@@ -97,13 +97,14 @@ export function Generador({
                   .replace(/\[Visión Sintética Generada\]:?/g, '')
                   .replace(/\n+/g, ' ')
                   .trim()
-                  .substring(0, 800);
+                  .split('.').slice(0, 2).join('.') // Solo las primeras 2 frases
+                  .substring(0, 400);
                 
                 const imgSrc = imagenBase64 
                   ? `data:image/jpeg;base64,${imagenBase64}`
                   : `https://image.pollinations.ai/prompt/${encodeURIComponent(
                       "Pintura rupestre ancestral huchití en cueva, gran mural, pigmentos minerales ocres y negros sobre piedra basalto, alta calidad. " + cleanPrompt
-                    )}?width=1280&height=720&nologo=true&model=flux&seed=42`;
+                    )}?width=1024&height=720&nologo=true&seed=${Math.floor(Math.random() * 10000)}`;
 
                 return (
                   <img 
