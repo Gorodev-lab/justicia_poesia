@@ -82,8 +82,26 @@ export function Generador({
           </button>
         </div>
         {imagenResult && (
-          <div className="p-6 border border-[var(--border)] bg-[var(--card-bg)] text-sm font-mono whitespace-pre-wrap leading-relaxed">
-            {imagenResult}
+          <div className="space-y-6">
+            <div className="p-6 border border-[var(--border)] bg-[var(--card-bg)] text-sm font-mono whitespace-pre-wrap leading-relaxed">
+              [Visión Sintética Generada]:
+              <br/><br/>
+              {imagenResult}
+            </div>
+            <div className="border border-[var(--border)] relative overflow-hidden bg-black/80 aspect-video flex items-center justify-center group">
+              <div className="absolute inset-0 bg-[var(--accent)]/5 animate-pulse" />
+              <img 
+                 src={`https://image.pollinations.ai/prompt/${encodeURIComponent(
+                   "Pintura rupestre rústica ancestral sobre piedra basalto, pigmentos ocres y negros. " + imagenResult.substring(0, 600)
+                 )}?width=1024&height=576&nologo=true&seed=42`} 
+                 alt="Sintetizador Visual"
+                 className="w-full h-full object-cover mix-blend-screen filter contrast-[1.1] grayscale-[10%] sepia-[40%] hue-rotate-[-15deg] transition-transform duration-[10s] group-hover:scale-105"
+                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <div className="absolute bottom-4 right-4 text-[10px] text-[#00FF00] font-mono opacity-60 bg-black/80 px-3 py-1 border border-[#00FF00]/30 backdrop-blur">
+                [ RENDERIZADO ÓPTICO ESTABLECIDO ]
+              </div>
+            </div>
           </div>
         )}
       </section>
