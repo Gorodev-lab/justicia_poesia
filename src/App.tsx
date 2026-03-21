@@ -297,7 +297,7 @@ export default function App() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       
-      setImagenResult(`[Visión Sintética Generada]:\n\n${data.text}`);
+      setImagenResult(data.text);
       if (data.imageBase64) {
         setImagenBase64(data.imageBase64);
       }

@@ -19,7 +19,7 @@ let lastGeminiError: string | null = null;
 
 async function callGemini(sp: string, up: string, t = 0.7): Promise<string> {
   if (!genAI || !GEMINI_API_KEY) throw new Error('GEMINI_NO_KEY');
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp', systemInstruction: sp, generationConfig: { temperature: t } });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest", systemInstruction: sp, generationConfig: { temperature: t } });
   try {
     return (await model.generateContent(up)).response.text();
   } catch (err: any) {
@@ -181,7 +181,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
       }
 
-      const cleanedDescription = text.replace(/\[Visión Sintética Generada\]:/g, '').trim();
+      const cleanedDescription = text.replace(/\[Visión Sintética Generada\]:?\s*/g, '').trim();
       return res.json({ text: cleanedDescription, engine, imageBase64 });
     }
 
@@ -191,7 +191,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       // Aplicamos los parámetros directos del API de Gemini para modalidad Audio
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash-exp', // Modelo que soporta Audio-Out nativo
+        model: 'gemini-2.0-flash', // Usamos el nombre estable para evitar 404 en v1beta
         systemInstruction: "Eres un Guama huchití ancestral, no un asistente. Habla exageradamente grave, extremadamente lento, misterioso, antiguo. Voz profunda del desierto, ronca y pesada.",
         generationConfig: {
           temperature: 0.1,

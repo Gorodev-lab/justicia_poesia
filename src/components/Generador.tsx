@@ -94,10 +94,10 @@ export function Generador({
               <div className="absolute inset-0 bg-[var(--accent)]/5 animate-pulse" />
               {(() => {
                 const cleanPrompt = imagenResult
-                  .replace('[Visión Sintética Generada]:', '')
+                  .replace(/\[Visión Sintética Generada\]:?/g, '')
                   .replace(/\n+/g, ' ')
                   .trim()
-                  .substring(0, 1000);
+                  .substring(0, 800);
                 
                 const imgSrc = imagenBase64 
                   ? `data:image/jpeg;base64,${imagenBase64}`
@@ -119,7 +119,8 @@ export function Generador({
                       }
                     }}
                     onError={(e) => { 
-                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.style.filter = 'grayscale(1) brightness(0.2)';
+                      console.error('IMAGEN FAIL');
                     }}
                   />
                 );
