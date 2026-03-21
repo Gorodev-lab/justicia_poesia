@@ -127,8 +127,23 @@ export default function App() {
     await supabase.auth.signOut();
   };
 
+  // ---- Capa de Pre-procesamiento Fonético (Uchití Audio Rules) ----
+  const uchitiPhoneticParser = (text: string) => {
+    return text
+      .toLowerCase()
+      .replace(/tsch/g, 'ch')           // Regla: tsch -> ch
+      .replace(/nn/g, 'n.n')            // Regla: nn -> n.n (detención silábica)
+      .replace(/mm/g, 'm.m')            // Regla: mm -> m.m
+      .replace(/[fglxz]/g, '')         // Regla: eliminar letras no existentes
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
   // ---- Funciones de SpeechSynthesis Nativas (Reemplazan TTS de Gemini) ----
-  const speakText = async (text: string, voiceNamePattern: string, onStart: () => void, onEnd: () => void) => {
+  const speakText = async (rawText: string, voiceNamePattern: string, onStart: () => void, onEnd: () => void) => {
+    // Procesamos el texto antes de enviarlo al motor
+    const text = uchitiPhoneticParser(rawText);
+    
     // Si pasamos la bandera 'Gemini-Guama', disparamos la Estrategia 2 (Audio Nativo Alta Calidad)
     if (voiceNamePattern === 'Gemini-Guama') {
       try {
