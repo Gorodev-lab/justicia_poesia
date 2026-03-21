@@ -187,18 +187,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .replace(/\[Visión Sintética Generada\]:?\s*/gi, '')
         .trim();
 
-      // 4. Fallback de Imagen: Si Imagen 3 falló, el backend proxy-flea Pollinations para evitar ORB/CORS
+      // 4. Fallback de Imagen: Si Imagen 3 falló, el backend proxy via Pollinations (con timeout 8s)
       if (!imageBase64) {
         try {
-          const shortPrompt = cleanedDescription.split('.').slice(0, 2).join('.').substring(0, 400);
+          const shortPrompt = cleanedDescription.split('.').slice(0, 2).join('.').substring(0, 300);
           const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(
             "Pintura rupestre huchití en cueva. " + shortPrompt
-          )}?width=1024&height=720&nologo=true&seed=${Math.floor(Math.random() * 10000)}`;
+          )}?width=768&height=512&nologo=true&seed=${Math.floor(Math.random() * 10000)}`;
           
-          const pRes = await fetch(pollinationsUrl);
-          if (pRes.ok) {
-            const buffer = await pRes.arrayBuffer();
-            imageBase64 = Buffer.from(buffer).toString('base64');
+          const pollAbort = new AbortController();
+          const pollTimeout = setTimeout(() => pollAbort.abort(), 8000);
+          try {
+            const pRes = await fetch(pollinationsUrl, { signal: pollAbort.signal });
+            clearTimeout(pollTimeout);
+            if (pRes.ok) {
+              const buffer = await pRes.arrayBuffer();
+              imageBase64 = Buffer.from(buffer).toString('base64');
+            }
+          } catch (fetchErr: any) {
+            clearTimeout(pollTimeout);
+            if (fetchErr.name === 'AbortError') {
+              console.warn("[POLLINATIONS] Timeout 8s — omitiendo imagen.");
+            } else { throw fetchErr; }
           }
         } catch (e: any) {
           console.error("[BACKEND POLLINATIONS FALLBACK]", e.message);
