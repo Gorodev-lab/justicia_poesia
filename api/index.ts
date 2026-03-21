@@ -19,7 +19,7 @@ let lastGeminiError: string | null = null;
 
 async function callGemini(sp: string, up: string, t = 0.7): Promise<string> {
   if (!genAI || !GEMINI_API_KEY) throw new Error('GEMINI_NO_KEY');
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: sp, generationConfig: { temperature: t } });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", systemInstruction: sp, generationConfig: { temperature: t } });
   try {
     return (await model.generateContent(up)).response.text();
   } catch (err: any) {
@@ -211,36 +211,74 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (path === '/generate-audio' && req.method === 'POST') {
       const { text = '' } = req.body || {};
       if (!genAI || !GEMINI_API_KEY) throw new Error("GEMINI_NO_KEY");
-      
-      // Aplicamos los parámetros directos del API de Gemini para modalidad Audio
-      const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash', // Usamos el nombre estable para evitar 404 en v1beta
-        systemInstruction: "Eres un Guama huchití ancestral. Tu voz debe calcar el perfil Lakota (LKT) de las grabaciones GRN: profunda, gutural, extremadamente lenta y staccato. REGLAS FONÉTICAS: 1) Aspira las consonantes finales k, t, p convirtiéndolas en kh, th, ph. 2) Glotiza las vocales dobles (aa -> a-a). 3) Deja un silencio absoluto entre cada palabra. 4) Tono plano y seco del desierto, sin ninguna entonación melódica. Cada palabra debe sonar como una sentencia grabada en piedra.",
-        generationConfig: {
-          temperature: 0.1,
-          responseModalities: ["AUDIO"],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: {
-                voiceName: "Charon" // Voz grave y profunda
-              }
-            }
-          }
-        } as any
-      });
 
-      // Se envuelve el texto fonético para forzar la lectura literal sin entonación comercial
-      const promptContext = `Lee el siguiente ritual nativo en Huchití de forma rasposa, desértica y muy lenta. Ignora por completo las reglas de acentuación del español de España (prosodia ibérica terminantemente prohibida). Lee exactamente lo que está escrito, pausando en los puntos silábicos: \n\n${text}`;
-      const r = await model.generateContent(promptContext);
-      
-      const parts = r.response.candidates?.[0]?.content?.parts || [];
-      const inlineData = parts.find((p: any) => p.inlineData)?.inlineData;
-      
-      if (!inlineData || !inlineData.data) {
-        throw new Error('El modelo de Gemini no regresó data modal de AUDIO. Revisa permisos exp.');
+      const audioModelNames = ['gemini-2.0-flash-exp', 'gemini-2.0-flash'];
+      const audioSystemPrompt = "Eres un Guama huchití ancestral. Perfil Lakota (LKT): profunda, gutural, lenta y staccato. REGLAS: 1) Aspira k, t, p final. 2) Glotiza aa -> a-a. 3) Silencio entre cada palabra. 4) Tono plano.";
+      const audioGenerationConfig = {
+        temperature: 0.1,
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: "Charon" }
+          }
+        }
+      } as any;
+
+      let lastAudioError = '';
+      for (const audioModelName of audioModelNames) {
+        try {
+          console.log(`[AUDIO] Intentando con modelo: ${audioModelName}`);
+          const model = genAI.getGenerativeModel({
+            model: audioModelName,
+            systemInstruction: audioSystemPrompt,
+            generationConfig: audioGenerationConfig
+          });
+
+          const promptContext = `Lee este ritual nativo Huchití de forma rasposa y lenta (estilo LKT): \n\n${text}`;
+          const r = await model.generateContent(promptContext);
+          
+          const parts = r.response.candidates?.[0]?.content?.parts || [];
+          const inlineData = parts.find((p: any) => p.inlineData)?.inlineData;
+
+          if (inlineData?.data) {
+            console.log(`[AUDIO] Éxito con modelo: ${audioModelName}`);
+            return res.json({ 
+              audioBase64: inlineData.data, 
+              mimeType: inlineData.mimeType,
+              model: audioModelName
+            });
+          }
+          lastAudioError = `[${audioModelName}] No devolvió inlineData de audio.`;
+          console.warn(lastAudioError);
+        } catch (err: any) {
+          lastAudioError = `[${audioModelName}] ${err.message}`;
+          console.error("[GEMINI AUDIO ERROR]", lastAudioError);
+        }
       }
+
+      return res.status(503).json({ 
+        error: "Motor de Audio de Gemini no disponible actualmente.",
+        detail: lastAudioError
+      });
+    }
+
+    if (path === '/debug' && req.method === 'GET') {
+      const results: any = { gemini_text: 'unknown', gemini_audio: 'unknown', pollinations: 'unknown' };
       
-      return res.json({ audioBase64: inlineData.data, mimeType: inlineData.mimeType });
+      try {
+        if (!genAI) throw new Error('GEMINI_NO_KEY');
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        await model.generateContent("test");
+        results.gemini_text = 'ok';
+      } catch (e: any) { results.gemini_text = e.message; }
+
+      try {
+        const pollinationsUrl = `https://image.pollinations.ai/prompt/test?width=128&height=128&nologo=true`;
+        const pRes = await fetch(pollinationsUrl);
+        results.pollinations = pRes.ok ? 'ok' : `fail_${pRes.status}`;
+      } catch (e: any) { results.pollinations = e.message; }
+
+      return res.json(results);
     }
 
     return res.status(404).json({ error: 'Not found' });
