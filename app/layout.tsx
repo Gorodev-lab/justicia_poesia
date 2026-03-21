@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Huchití OS | Justicia Filosófica',
-  description: 'Sistema de Recuperación Lingüística Guaycura-Huchití',
+  title: 'HUCHITÍ: PROYECTO DATEMBÀ',
+  description: 'RECUPERACIÓN LINGÜÍSTICA ACTIVA',
 };
 
 // Optimización nativa y fluida para el entorno móvil, que evite el zooming y permita una UI como App Nativas
