@@ -20,6 +20,7 @@ import {
   generateNativeAudioEndpoint
 } from './lib/gemini';
 
+console.log("HUCHITI_V2_ACTIVE [APP]");
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [explanation, setExplanation] = useState<{ [key: number]: string }>({});
