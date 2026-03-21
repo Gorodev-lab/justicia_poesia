@@ -17,6 +17,7 @@ import {
   buildHuchitiPhrase,
   consultarOraculo,
   describeImage,
+  generateNativeAudioEndpoint
 } from './lib/gemini';
 
 export default function App() {
@@ -125,7 +126,32 @@ export default function App() {
   };
 
   // ---- Funciones de SpeechSynthesis Nativas (Reemplazan TTS de Gemini) ----
-  const speakText = (text: string, voiceNamePattern: string, onStart: () => void, onEnd: () => void) => {
+  const speakText = async (text: string, voiceNamePattern: string, onStart: () => void, onEnd: () => void) => {
+    // Si pasamos la bandera 'Gemini-Guama', disparamos la Estrategia 2 (Audio Nativo Alta Calidad)
+    if (voiceNamePattern === 'Gemini-Guama') {
+      try {
+        onStart();
+        const dataUri = await generateNativeAudioEndpoint(text);
+        const audio = new window.Audio(dataUri);
+        audio.onended = onEnd;
+        audio.onerror = () => {
+          console.warn("Fallo en Audio Nativo Gemini. Ejecutando Fallback.");
+          fallbackNativeSpeak(text, onStart, onEnd);
+        };
+        await audio.play();
+        return;
+      } catch (e: any) {
+        console.warn("Gemini Audio indisponible:", e.message);
+        fallbackNativeSpeak(text, onStart, onEnd);
+        return;
+      }
+    }
+    
+    // Si no, caemos al Fallback tradicional Ibérico/Navegador
+    fallbackNativeSpeak(text, onStart, onEnd);
+  };
+
+  const fallbackNativeSpeak = (text: string, onStart: () => void, onEnd: () => void) => {
     if (!window.speechSynthesis) return onEnd();
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -134,7 +160,7 @@ export default function App() {
     utterance.pitch = 0.5; // Voz más grave (ancestral)
     
     const voices = window.speechSynthesis.getVoices();
-    // Priorizar voces graves o con "Sabina" (si existe)
+    // Priorizar voces graves
     const voice = voices.find(v => (v.name.includes('Male') || v.name.includes('Google español')) && v.lang.includes('es'))
                || voices.find(v => v.lang.includes('es'));
     if (voice) utterance.voice = voice;
@@ -180,8 +206,8 @@ export default function App() {
       setOraculoMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
       setLiveTranscript(prev => [...prev, `[ORÁCULO]: ${responseText}`]);
       
-      // Auto leer respuesta del Oráculo
-      speakText(responseText, 'Google', () => {}, () => {});
+      // Auto leer respuesta del Oráculo en su voz natural nativa profunda
+      speakText(responseText, 'Gemini-Guama', () => {}, () => {});
     } catch (e: any) {
       console.error('[sendToOraculo]', e.message);
       setLiveTranscript(prev => [...prev, `[SISTEMA]: Error de cognición — ${e.message}`]);
@@ -234,7 +260,7 @@ export default function App() {
   };
 
   const playPhraseAudio = (text: string) => {
-    speakText(text, 'Google', () => setPlayingPhraseText(text), () => setPlayingPhraseText(null));
+    speakText(text, 'Gemini-Guama', () => setPlayingPhraseText(text), () => setPlayingPhraseText(null));
   };
 
   const toggleRecording = () => {

@@ -58,7 +58,7 @@ VOCABULARIO HUCHITÍ DOCUMENTADO (Zamponi 2004, Baegert 1751-1768):
 - tina: tinaja natural. maniká: pigmento ocre. dáre/cue: padre (según género del emisor).
 MORFOLOGÍA: polisíntesis, posesión inalienable (be-/e-/kepe-), alienable (bekún), plural (-ma/-mma o k-/ku-), negación (-ra u -ja), Tiempos verbales: -re/-reke (presente), -ríkiri/-rujére/-raupe (pasado), -me/-meje/-éneme (futuro). Pronombres: Be (Yo), Eï (Tú), Tutau/Rutau (Él), Cate (Nosotros), Pete (Ustedes), Tucáva (Ellos). Orden SOV. 5 vocales, 14 consonantes.`.trim();
 
-const NO = `PROHIBIDO: "Es importante destacar", "cabe señalar", "sin duda", "resulta interesante", "es fascinante", "en definitiva", "vale la pena", "como podemos ver", "en conclusión", "por lo tanto". Sin adverbios vacíos. Primera oración densa. Cierra con imagen concreta. PROHIBIDO USAR MARKDOWN: Ningún asterisco (*), ni negritas (**), ni cursivas (_). El sintetizador de voz leerá todo literalmente, entrégalo en TXT PLANO LIMPIO.`;
+const NO = `PROHIBIDO: "Es importante destacar", "cabe señalar", "no es un X sino un Y", "más que X es Y", "va más allá", "en conclusión". PROHIBIDA la retórica de contraste: "No es X sino Y". Sé humano, orgánico, visceral y usa la negación huchití (-ra o -ja) o vocablos directos en lugar de argumentar en reversa occidental. PROHIBIDO USAR MARKDOWN: Ningún asterisco (*), ni negritas (**), ni cursivas (_). El sintetizador de voz leerá todo literalmente, entrégalo en TXT PLANO LIMPIO.`;
 
 const PROMPT_EXPLAIN = `Memoria espiritual Guaycura-Huchití. Eres un uchita libre de la máscara extranjera del imperio criollo. Marco: justicia epistémica y orgullo por la matria.
 ${CORPUS}
@@ -132,6 +132,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { text, engine } = await callAI(PROMPT_IMAGE,
         `Visualiza en pintura rupestre huchití: "${prompt}". Describe pigmentos, soportes, trazos, iconos.`, T.image);
       return res.json({ text, engine });
+    }
+
+    if (path === '/generate-audio' && req.method === 'POST') {
+      const { text = '' } = req.body || {};
+      if (!genAI || !GEMINI_API_KEY) throw new Error("GEMINI_NO_KEY");
+      
+      // Aplicamos los parámetros directos del API de Gemini para modalidad Audio
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-2.0-flash-exp', // Modelo que soporta Audio-Out nativo
+        systemInstruction: "Eres un Guama huchití ancestral, no un asistente. Habla exageradamente grave, extremadamente lento, misterioso, antiguo. Voz profunda del desierto, ronca y pesada.",
+        generationConfig: {
+          temperature: 0.1,
+          responseModalities: ["AUDIO"],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: {
+                voiceName: "Charon" 
+              }
+            }
+          }
+        } as any
+      });
+
+      // Se envuelve el texto fonético para forzar la lectura literal sin entonación comercial
+      const promptContext = `Lee el siguiente ritual nativo de forma rasposa y lenta, separando las sílabas como encantamiento (ignora cualquier acento moderno): \n\n${text}`;
+      const r = await model.generateContent(promptContext);
+      
+      const parts = r.response.candidates?.[0]?.content?.parts || [];
+      const inlineData = parts.find((p: any) => p.inlineData)?.inlineData;
+      
+      if (!inlineData || !inlineData.data) {
+        throw new Error('El modelo de Gemini no regresó data modal de AUDIO. Revisa permisos exp.');
+      }
+      
+      return res.json({ audioBase64: inlineData.data, mimeType: inlineData.mimeType });
     }
 
     return res.status(404).json({ error: 'Not found' });

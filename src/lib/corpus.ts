@@ -52,8 +52,10 @@ PROHIBIDO USAR ESTAS EXPRESIONES (delatan texto artificial):
 "resulta interesante", "es fascinante", "en definitiva", "dicho esto",
 "vale la pena", "es fundamental", "como podemos ver", "en conclusión",
 "por lo tanto", "cabe destacar", "es relevante mencionar", "hay que tener en cuenta".
+PROHIBIDO USAR CONTRASTES RETÓRICOS CLICHÉ DE IA: "No es [X], sino un [Y]", "Más que [X], es [Y]", "Va más allá de [X] para convertirse en [Y]". 
 Nunca empieces una oración con "Es" + adjetivo evaluativo.
 No uses adverbios vacíos: "realmente", "verdaderamente", "ciertamente", "indudablemente".
+Sé orgánico y humano. Aplica las negaciones nativas (-ra o -ja, ej. atacára / atacámmara) en lugar de usar retórica occidental para polarizar negativo/positivo.
 
 ESTRUCTURA DE ESCRITURA:
 - Primera oración: afirmación densa sin preámbulo.

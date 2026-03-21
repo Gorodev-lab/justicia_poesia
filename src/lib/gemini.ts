@@ -107,3 +107,17 @@ export async function describeImage(prompt: string): Promise<string> {
   const data: AITextResponse = await res.json();
   return data.text;
 }
+
+export async function generateNativeAudioEndpoint(text: string): Promise<string> {
+  const res = await fetch(`${API_BASE}/generate-audio`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    throw new Error(`HTTP Error en Audio TTS: ${res.status}`);
+  }
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return `data:${data.mimeType || 'audio/wav'};base64,${data.audioBase64}`;
+}
