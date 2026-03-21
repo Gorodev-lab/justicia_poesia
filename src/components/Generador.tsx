@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Terminal } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'motion/react';
 
 interface GeneradorProps {
@@ -102,9 +102,18 @@ export function Generador({
                 
                 const imgSrc = imagenBase64 
                   ? `data:image/jpeg;base64,${imagenBase64}`
-                  : `https://image.pollinations.ai/prompt/${encodeURIComponent(
-                      "Pintura rupestre ancestral huchití en cueva, gran mural, pigmentos minerales ocres y negros sobre piedra basalto, alta calidad. " + cleanPrompt
-                    )}?width=1024&height=720&nologo=true&seed=${Math.floor(Math.random() * 10000)}`;
+                  : null;
+
+                if (!imgSrc) {
+                  return (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--accent)] opacity-40 p-8 text-center space-y-4">
+                      <Terminal className="w-12 h-12 animate-pulse" />
+                      <p className="text-xs uppercase tracking-widest font-mono">
+                        [!] SINCRONIZACIÓN VISUAL FALLIDA. EL MOTOR DE MEMORIA NO HA PODIDO MATERIALIZAR ESTA VISIÓN.
+                      </p>
+                    </div>
+                  );
+                }
 
                 return (
                   <img 

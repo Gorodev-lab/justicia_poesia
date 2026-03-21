@@ -154,7 +154,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         `Visualiza en pintura rupestre huchití: "${prompt}". Describe pigmentos, soportes, trazos, iconos.`, T.image);
       
       // 2. Generar la imagen real usando Imagen 3 (Opcional, solo si Gemini está activo)
-      let imageBase64 = null;
+      let imageBase64: string | null = null;
       if (engine === 'gemini') {
           try {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEMINI_API_KEY}`;
@@ -181,7 +181,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
       }
 
-      const cleanedDescription = text.replace(/\[Visión Sintética Generada\]:?\s*/g, '').trim();
+      // 3. Limpieza final del texto (Robusta contra encoding de acentos)
+      const cleanedDescription = text
+        .replace(/^\[.*?\]:?\s*/, '') // Elimina cualquier prefijo tipo [XX]:
+        .replace(/\[Visión Sintética Generada\]:?\s*/gi, '')
+        .trim();
+
+      // 4. Fallback de Imagen: Si Imagen 3 falló, el backend proxy-flea Pollinations para evitar ORB/CORS
+      if (!imageBase64) {
+        try {
+          const shortPrompt = cleanedDescription.split('.').slice(0, 2).join('.').substring(0, 400);
+          const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(
+            "Pintura rupestre huchití en cueva. " + shortPrompt
+          )}?width=1024&height=720&nologo=true&seed=${Math.floor(Math.random() * 10000)}`;
+          
+          const pRes = await fetch(pollinationsUrl);
+          if (pRes.ok) {
+            const buffer = await pRes.arrayBuffer();
+            imageBase64 = Buffer.from(buffer).toString('base64');
+          }
+        } catch (e: any) {
+          console.error("[BACKEND POLLINATIONS FALLBACK]", e.message);
+        }
+      }
+
       return res.json({ text: cleanedDescription, engine, imageBase64 });
     }
 
