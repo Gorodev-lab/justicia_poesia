@@ -64,13 +64,13 @@ export function Generador({
 
       <section className="space-y-8">
         <div className="space-y-2">
-          <h3 className="text-2xl font-bold">Sintetizador Visual</h3>
-          <p className="text-sm opacity-50 uppercase tracking-widest">Genera imágenes con estética de pigmentos minerales</p>
+          <h3 className="text-2xl font-bold">Generación de Visiones</h3>
+          <p className="text-sm opacity-50 uppercase tracking-widest">Producción de memoria visual con pigmentos minerales</p>
         </div>
         <div className="flex flex-col md:flex-row gap-4">
           <input 
             type="text"
-            placeholder="Describe la visión (ej: Guerrero huchití cazando...)"
+            placeholder="Orden de trazado (ej: Guerrero huchití cazando...)"
             className="flex-1 bg-[var(--input-bg)] border border-[var(--border)] px-6 py-4 focus:outline-none focus:bg-[var(--accent-soft)] transition-all"
             value={imagenPrompt}
             onChange={(e) => setImagenPrompt(e.target.value)}
@@ -136,14 +136,14 @@ export function Generador({
 
       <section className="space-y-8">
         <div className="space-y-2">
-          <h3 className="text-2xl font-bold">Animación de la Memoria</h3>
-          <p className="text-sm opacity-50 uppercase tracking-widest">Revive el pasado mediante video generativo</p>
+          <h3 className="text-2xl font-bold">Dinámica de Recuerdos</h3>
+          <p className="text-sm opacity-50 uppercase tracking-widest">Procesamiento de movimiento ancestral</p>
         </div>
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <input 
               type="text"
-              placeholder="Describe el movimiento..."
+              placeholder="Orden de movimiento..."
               className="flex-1 bg-[var(--input-bg)] border border-[var(--border)] px-6 py-4 focus:outline-none focus:bg-[var(--accent-soft)] transition-all"
               value={veoPrompt}
               onChange={(e) => setVeoPrompt(e.target.value)}

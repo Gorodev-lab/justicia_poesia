@@ -185,7 +185,7 @@ export default function App() {
   // ---- Oraculo (Live API convertido a chat de texto con TTS) ----
   const startLiveSession = async () => {
     setIsLiveActive(true);
-    setLiveTranscript(["[SISTEMA]: Conexión neuronal establecida. El Oráculo escucha. Envía textos por la consola inferior."]);
+    setLiveTranscript(["[SISTEMA]: ENLACE ESTABLECIDO. EL ORÁCULO PROCESA CONSULTAS. ENTRADA DE DATOS ABIERTA."]);
     setOraculoMessages([]);
   };
 
@@ -372,10 +372,10 @@ export default function App() {
             </div>
             <div className="space-y-1">
               <h1 className="text-4xl font-bold tracking-tighter">
-                Huchití OS
+                HUCHITÍ EN CÓDIGO
               </h1>
               <p className="text-xs uppercase tracking-[0.2em] font-medium opacity-70">
-                Sistema de recuperación lingüística
+                PROYECTO DATEMBÀ: RECUPERACIÓN ACTIVA
               </p>
             </div>
           </div>

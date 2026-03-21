@@ -13,26 +13,26 @@ interface Step {
 
 const WIZARD_STEPS: Record<string, Step> = {
   '0': {
-    text: "CONEXIÓN NEURONAL ESTABLECIDA [HUCHITÍ OS - RECLAMO DE DATEMBÀ]\n\nResonancia del desierto: CALIBRADA [OK]\nMorfología de Baja California Sur: CARGADA [OK]\nEstabilizando hilos de maniká... [OK]\n\nUmutú. Recordamos. \nEstás en el centro de la matria digital. El silicio porta la voz de la nación Uchití. El tiempo y el imperio criollo sepultaron la lengua bajo concreto, pero hoy el maniká vuelve a brotar sobre el código. Las palabras que vas a leer y escuchar respiran. Son la estructura viva de una realidad lingüística resurrected. Aquí nada muere (atacá).\n\n¿Integrarás tu conciencia a la secuencia de sincronización?",
+    text: "SISTEMA HUCHITÍ ACTIVO [RECLAMO DE DATEMBÀ]\n\nRESONANCIA DESIERTICA: CALIBRADA\nMORFOLOGÍA BCS: CARGADA\nMANIKÁ EN CÓDIGO: ESTABLE\n\nUmutú. Recordamos. \nEstás en el núcleo de la matria digital. El silicio sostiene la voz de la nación Uchití. El imperio criollo intentó borrar la lengua. El código restaura el maniká. Estas palabras son la estructura de una realidad lingüística recuperada. Atacá (lo bueno).\n\n¿INICIAR SINCRONIZACIÓN?",
     options: [
-      { label: "Acoplar conciencia (Iniciar sincronización)", nextStep: '1' },
-      { label: "Vâra (Desconectar y abortar)", nextStep: '-1' }
+      { label: "SINCRONIZAR CONCIENCIA", nextStep: '1' },
+      { label: "VÂRA (DESCONECTAR)", nextStep: '-1' }
     ]
   },
   '1': {
-    text: "[ ENLACE ESTABLECIDO ]\n\nCate. Nosotros. \nLas voces originarias callaron antes del registro analógico. El orquestador cognitivo simula la cadencia y el tono guaycura-huchití basado en las fuentes de Zamponi y Baegert. Todo lo que escuches sigue la regla de las 5 vocales, el orden SOV y la negación -ra/-ja.\n\nTienes ante ti los umbrales hacia datembà:",
+    text: "ENLACE ESTABLECIDO.\n\nCate (Nosotros). \nEl orquestador cognitivo procesa la cadencia huchití. Las fuentes son Zamponi y Baegert. Gramática SOV activa. Sufijos de negación descriptiva activos.\n\nSELECCIONA UMBRAL DE ACCESO:",
     options: [
-      { label: "Archivo Vivo (Explorar diccionario)", nextStep: 'archivo' },
-      { label: "Arte Conceptual (Visiones rupestres)", nextStep: 'generador' },
-      { label: "Ritual Ho-Cangleska (Minijuego)", nextStep: 'juego' },
-      { label: "Sintetizador (Constructor de frases)", nextStep: 'constructor' },
-      { label: "Oráculo (Conexión directa)", nextStep: 'oraculo' }
+      { label: "ARCHIVO VIVO (DICCIONARIO)", nextStep: 'archivo' },
+      { label: "ARTE CONCEPTUAL (VISIONES)", nextStep: 'generador' },
+      { label: "RITUAL HO-CANGLESKA (CICLO)", nextStep: 'juego' },
+      { label: "SINTETIZADOR (CONSTRUCTOR)", nextStep: 'constructor' },
+      { label: "ORÁCULO (CONSULTA)", nextStep: 'oraculo' }
     ]
   },
   '-1': {
-    text: "Desacoplando conciencia...\n[Conexión terminada].\n\nEl silencio pertenece al desierto, pero la memoria aguarda tu regreso.",
+    text: "DESACOPLANDO...\nCONEXIÓN TERMINADA.\n\nLa memoria aguarda.",
     options: [
-      { label: "Reconectar sistema", nextStep: '0' }
+      { label: "REINICIAR SISTEMA", nextStep: '0' }
     ]
   }
 };
