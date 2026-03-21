@@ -127,15 +127,19 @@ export default function App() {
     await supabase.auth.signOut();
   };
 
-  // ---- Capa de Pre-procesamiento Fonético (Uchití Audio Rules) ----
+  // ---- Capa de Pre-procesamiento Fonético (Uchití Audio Rules v2 - Perfil LKT) ----
   const uchitiPhoneticParser = (text: string) => {
     return text
       .toLowerCase()
       .replace(/tsch/g, 'ch')           // Regla: tsch -> ch
-      .replace(/nn/g, 'n.n')            // Regla: nn -> n.n (detención silábica)
+      .replace(/nn/g, 'n.n')            // Regla: nn -> n.n
       .replace(/mm/g, 'm.m')            // Regla: mm -> m.m
+      .replace(/([aeiou])\1/g, '$1-$1') // Regla: Glotización de vocales dobles (aa -> a-a)
+      .replace(/k(\s|$|\.)/g, 'kh$1')   // Regla: Aspiración de k final
+      .replace(/t(\s|$|\.)/g, 'th$1')   // Regla: Aspiración de t final
+      .replace(/p(\s|$|\.)/g, 'ph$1')   // Regla: Aspiración de p final
       .replace(/[fglxz]/g, '')         // Regla: eliminar letras no existentes
-      .replace(/\s+/g, ' ')
+      .replace(/\s+/g, '. ')            // Regla: Forzar pausa entre palabras (punto invisible)
       .trim();
   };
 
@@ -173,8 +177,8 @@ export default function App() {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-MX';
-    utterance.rate = 0.6; // Cadencia lenta y pesada (perfil LKT)
-    utterance.pitch = 0.4; // Tono muy grave, resonante
+    utterance.rate = 0.45; // Cadencia ceremonial extremadamente lenta (referencia LKT)
+    utterance.pitch = 0.4; // Tono grave y resonante
     
     const voices = window.speechSynthesis.getVoices();
     // Priorizar voces graves
