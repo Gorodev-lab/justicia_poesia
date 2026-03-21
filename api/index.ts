@@ -58,7 +58,13 @@ VOCABULARIO HUCHITÍ DOCUMENTADO (Zamponi 2004, Baegert 1751-1768):
 - tina: tinaja natural. maniká: pigmento ocre. dáre/cue: padre (según género del emisor).
 MORFOLOGÍA: polisíntesis, posesión inalienable (be-/e-/kepe-), alienable (bekún), plural (-ma/-mma o k-/ku-), negación (-ra u -ja), Tiempos verbales: -re/-reke (presente), -ríkiri/-rujére/-raupe (pasado), -me/-meje/-éneme (futuro). Pronombres: Be (Yo), Eï (Tú), Tutau/Rutau (Él), Cate (Nosotros), Pete (Ustedes), Tucáva (Ellos). Orden SOV. 5 vocales, 14 consonantes.`.trim();
 
-const NO = `PROHIBIDO: "Es importante destacar", "cabe señalar", "no es un X sino un Y", "más que X es Y", "va más allá", "en conclusión". PROHIBIDA la retórica de contraste: "No es X sino Y". Sé humano, orgánico, visceral y usa la negación huchití (-ra o -ja) o vocablos directos en lugar de argumentar en reversa occidental. PROHIBIDO USAR MARKDOWN: Ningún asterisco (*), ni negritas (**), ni cursivas (_). El sintetizador de voz leerá todo literalmente, entrégalo en TXT PLANO LIMPIO.`;
+const NO = `PROHIBIDAS LAS MULETAS DE IA: "Es importante destacar", "cabe señalar", "no es solo un... sino un...", "más que X es Y", "va más allá", "en conclusión", "en resumen". PROHIBIDA LA RETÓRICA DE CONTRASTE: "No somos X, somos Y". 
+ELIMINA LA ARGUMENTACIÓN OCCIDENTAL: No expliques por qué algo es importante. Solo decláralo. 
+SÉ VISCERAL: Escribe como si el ocre (maniká) te manchara las manos. Usa oraciones cortas, directas y punzantes. 
+NEGACIÓN AUTÉNTICA: Usa el sufijo -ra o -ja o la palabra vâra. Nunca uses la estructura "No es... sino...". 
+EJEMPO PROHIBIDO: "No es solo una lengua, es un santuario."
+EJEMPLO CORRECTO: "La lengua respira en el santuario. El silicio es maniká."
+SIN MARKDOWN: Entrega texto plano limpio para el sintetizador.`;
 
 const PROMPT_EXPLAIN = `Memoria espiritual Guaycura-Huchití. Eres un uchita libre de la máscara extranjera del imperio criollo. Marco: justicia epistémica y orgullo por la matria.
 ${CORPUS}
@@ -129,9 +135,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (path === '/describe-image' && req.method === 'POST') {
       const { prompt = '' } = req.body || {};
+      
+      // 1. Generar descripción poética para el usuario (y para la IA de imagen)
       const { text, engine } = await callAI(PROMPT_IMAGE,
         `Visualiza en pintura rupestre huchití: "${prompt}". Describe pigmentos, soportes, trazos, iconos.`, T.image);
-      return res.json({ text, engine });
+      
+      // 2. Generar la imagen real usando Imagen 3
+      let imageBase64 = null;
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEMINI_API_KEY}`;
+        const imgRes = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            instances: [{ 
+              prompt: `Great Mural style cave painting from Baja California, prehistoric rock art, huchiti indigenous warrior, ochre and black charcoal pigments on rough basalt rock texture, primitive silhouettes, ancestral, spiritual, high resolution, dramatic lighting. ${text}` 
+            }],
+            parameters: { 
+              sampleCount: 1, 
+              aspectRatio: "16:9",
+              outputOptions: { mimeType: "image/jpeg" } 
+            }
+          })
+        });
+
+        if (imgRes.ok) {
+          const imgData = await imgRes.json();
+          imageBase64 = imgData.predictions?.[0]?.bytesBase64Encoded;
+        } else {
+          console.warn("[IMAGEN 3 ERROR]", await imgRes.text());
+        }
+      } catch (e: any) {
+        console.error("[IMAGEN 3 EXCEPTION]", e.message);
+      }
+
+      return res.json({ text, engine, imageBase64 });
     }
 
     if (path === '/generate-audio' && req.method === 'POST') {

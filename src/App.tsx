@@ -55,6 +55,7 @@ export default function App() {
   const [veoLoading, setVeoLoading] = useState(false);
   const [imagenPrompt, setImagenPrompt] = useState('');
   const [imagenResult, setImagenResult] = useState<string | null>(null);
+  const [imagenBase64, setImagenBase64] = useState<string | null>(null);
   const [imagenLoading, setImagenLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isApiHealthy, setIsApiHealthy] = useState(true);
@@ -282,13 +283,23 @@ export default function App() {
     }
   };
 
-  // Generador de arte conceptual (descripción rupestre con Gemini)
   const generateImage = async () => {
     if (!imagenPrompt) return;
     setImagenLoading(true);
+    setImagenBase64(null); // Reset previous image
     try {
-      const text = await describeImage(imagenPrompt);
-      setImagenResult(`[Visión Sintética Generada]:\n\n${text}`);
+      const res = await fetch('/api/describe-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: imagenPrompt }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      
+      setImagenResult(`[Visión Sintética Generada]:\n\n${data.text}`);
+      if (data.imageBase64) {
+        setImagenBase64(data.imageBase64);
+      }
     } catch (error: any) {
       console.error('[generateImage]', error.message);
       setImagenResult(`[ERROR] ${error.message}`);
@@ -472,6 +483,7 @@ export default function App() {
             generateImage={generateImage}
             imagenLoading={imagenLoading}
             imagenResult={imagenResult}
+            imagenBase64={imagenBase64}
             veoPrompt={veoPrompt}
             setVeoPrompt={setVeoPrompt}
             selectedFile={selectedFile}

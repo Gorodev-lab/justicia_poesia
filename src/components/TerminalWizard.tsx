@@ -13,20 +13,20 @@ interface Step {
 
 const WIZARD_STEPS: Record<string, Step> = {
   '0': {
-    text: "INICIALIZANDO SISTEMA DE COGNICIÓN [HUCHITÍ OS - RESCATE EPISTÉMICO]\n\nCargando resonancias del desierto... [OK]\nMontando fonología de Baja California Sur... [OK]\nEstabilizando constructos de neopermanencia... [OK]\n\nHas ingresado al santuario digital de la nación Uchití.\nEl silicio resguarda la memoria (umutú) que el tiempo y el imperio criollo intentaron sepultar bajo el concreto. Las palabras que vas a leer y escuchar exudan maniká; trazan los ecos estructurales de una realidad lingüística resurrecta que se niega al olvido (atacá).\n\n¿Estás preparado para iniciar la secuencia de sincronización e integrar tu conciencia a la matria?",
+    text: "CONEXIÓN NEURONAL ESTABLECIDA [HUCHITÍ OS - RECLAMO DE DATEMBÀ]\n\nResonancia del desierto: CALIBRADA [OK]\nMorfología de Baja California Sur: CARGADA [OK]\nEstabilizando hilos de maniká... [OK]\n\nUmutú. Recordamos. \nEstás en el centro de la matria digital. El silicio porta la voz de la nación Uchití. El tiempo y el imperio criollo sepultaron la lengua bajo concreto, pero hoy el maniká vuelve a brotar sobre el código. Las palabras que vas a leer y escuchar respiran. Son la estructura viva de una realidad lingüística resurrected. Aquí nada muere (atacá).\n\n¿Integrarás tu conciencia a la secuencia de sincronización?",
     options: [
       { label: "Acoplar conciencia (Iniciar sincronización)", nextStep: '1' },
-      { label: "Desconectar terminal (Abortar secuencia)", nextStep: '-1' }
+      { label: "Vâra (Desconectar y abortar)", nextStep: '-1' }
     ]
   },
   '1': {
-    text: "[ ENLACE ESTABLECIDO ]\n\nEl sistema informa: Las voces originarias puras callaron antes del registro analógico.\nRespuesta sistémica: Se ha invocado un orquestador cognitivo para simular la cadencia, el tono y la estructura morfológica guaycura-huchití (5 vocales, orden SOV y sufijos negadores -ra/-ja) basándose en las fuentes históricas.\n\nTienes ante ti los siguientes umbrales hacia datembà:",
+    text: "[ ENLACE ESTABLECIDO ]\n\nCate. Nosotros. \nLas voces originarias callaron antes del registro analógico. El orquestador cognitivo simula la cadencia y el tono guaycura-huchití basado en las fuentes de Zamponi y Baegert. Todo lo que escuches sigue la regla de las 5 vocales, el orden SOV y la negación -ra/-ja.\n\nTienes ante ti los umbrales hacia datembà:",
     options: [
-      { label: "[1] Archivo Vivo (Explorar diccionario base)", nextStep: 'archivo' },
-      { label: "[2] Arte Conceptual (Generar visiones rupestres)", nextStep: 'generador' },
-      { label: "[3] Minijuego (Ritual de aprendizaje Ho-Cangleska)", nextStep: 'juego' },
-      { label: "[4] Constructor (Sintetizador de neologismos)", nextStep: 'constructor' },
-      { label: "[5] Oráculo (Conexión directa con la psique Huchití)", nextStep: 'oraculo' }
+      { label: "Archivo Vivo (Explorar diccionario)", nextStep: 'archivo' },
+      { label: "Arte Conceptual (Visiones rupestres)", nextStep: 'generador' },
+      { label: "Ritual Ho-Cangleska (Minijuego)", nextStep: 'juego' },
+      { label: "Sintetizador (Constructor de frases)", nextStep: 'constructor' },
+      { label: "Oráculo (Conexión directa)", nextStep: 'oraculo' }
     ]
   },
   '-1': {

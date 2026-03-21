@@ -17,6 +17,7 @@ export const API_BASE = '/api';
 export interface AITextResponse {
   text: string;
   engine?: string; // 'gemini' | 'mistral'
+  imageBase64?: string;
 }
 
 /**

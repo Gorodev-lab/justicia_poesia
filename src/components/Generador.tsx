@@ -8,6 +8,7 @@ interface GeneradorProps {
   generateImage: () => void;
   imagenLoading: boolean;
   imagenResult: string | null;
+  imagenBase64?: string | null;
   veoPrompt: string;
   setVeoPrompt: (val: string) => void;
   selectedFile: File | null;
@@ -47,7 +48,8 @@ export function Generador({
   setSelectedFile,
   generateVideo,
   veoLoading,
-  veoResult
+  veoResult,
+  imagenBase64
 }: GeneradorProps) {
   return (
     <motion.div 
@@ -90,16 +92,40 @@ export function Generador({
             </div>
             <div className="border border-[var(--border)] relative overflow-hidden bg-black/80 aspect-video flex items-center justify-center group">
               <div className="absolute inset-0 bg-[var(--accent)]/5 animate-pulse" />
-              <img 
-                 src={`https://image.pollinations.ai/prompt/${encodeURIComponent(
-                   "Pintura rupestre rústica ancestral sobre piedra basalto, pigmentos ocres y negros. " + imagenResult.substring(0, 600)
-                 )}?width=1024&height=576&nologo=true&seed=42`} 
-                 alt="Sintetizador Visual"
-                 className="w-full h-full object-cover mix-blend-screen filter contrast-[1.1] grayscale-[10%] sepia-[40%] hue-rotate-[-15deg] transition-transform duration-[10s] group-hover:scale-105"
-                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
-              />
-              <div className="absolute bottom-4 right-4 text-[10px] text-[#00FF00] font-mono opacity-60 bg-black/80 px-3 py-1 border border-[#00FF00]/30 backdrop-blur">
-                [ RENDERIZADO ÓPTICO ESTABLECIDO ]
+              {(() => {
+                const cleanPrompt = imagenResult
+                  .replace('[Visión Sintética Generada]:', '')
+                  .replace(/\n+/g, ' ')
+                  .trim()
+                  .substring(0, 1000);
+                
+                const imgSrc = imagenBase64 
+                  ? `data:image/jpeg;base64,${imagenBase64}`
+                  : `https://image.pollinations.ai/prompt/${encodeURIComponent(
+                      "Pintura rupestre ancestral huchití en cueva, gran mural, pigmentos minerales ocres y negros sobre piedra basalto, alta calidad. " + cleanPrompt
+                    )}?width=1280&height=720&nologo=true&model=flux&seed=42`;
+
+                return (
+                  <img 
+                    src={imgSrc} 
+                    alt="Sintetizador Visual"
+                    className="w-full h-full object-cover mix-blend-screen filter contrast-[1.1] grayscale-[10%] sepia-[30%] hue-rotate-[-10deg] transition-transform duration-[10s] group-hover:scale-110"
+                    onLoad={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                      const parent = e.currentTarget.parentElement;
+                      if (parent) {
+                        const pulse = parent.querySelector('.animate-pulse');
+                        if (pulse) pulse.remove();
+                      }
+                    }}
+                    onError={(e) => { 
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                );
+              })()}
+              <div className="absolute bottom-4 right-4 text-[10px] text-[#00FF00] font-mono opacity-60 bg-black/80 px-3 py-1 border border-[#00FF00]/30 backdrop-blur group-hover:opacity-100 transition-opacity">
+                [ RENDERIZADO {imagenBase64 ? 'NATIVO' : 'ESTABLECIDO'} ]
               </div>
             </div>
           </div>
