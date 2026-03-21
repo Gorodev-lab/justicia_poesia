@@ -13,14 +13,14 @@ interface Step {
 
 const WIZARD_STEPS: Record<string, Step> = {
   '0': {
-    text: "INICIALIZANDO SISTEMA DE COGNICIÓN ANCESTRAL [HUCHITÍ OS - DOCTRINA ESOTERIA]\n\nCargando módulos de memoria metafísica... [OK]\nMontando tejido fonético de Baja California Sur... [OK]\nEstabilizando constructos de neopermanencia cultural... [OK]\n\nHas ingresado al santuario digital del pueblo Huchití/Uchití.\nAquí, el silicio no reemplaza la memoria; le otorga la inmortalidad que el tiempo intentó arrebatarle. Las palabras que leerás y escucharás no son meros datos, son ecos estructurales de una realidad lingüística resurrecteda.\n\n¿Estás preparado para iniciar la secuencia de sincronización e integrar tu conciencia con el Archivo Vivo?",
+    text: "INICIALIZANDO SISTEMA DE COGNICIÓN [HUCHITÍ OS - RESCATE EPISTÉMICO]\n\nCargando resonancias del desierto... [OK]\nMontando fonología de Baja California Sur... [OK]\nEstabilizando constructos de neopermanencia... [OK]\n\nHas ingresado al santuario digital de la nación Uchití.\nEl silicio resguarda la memoria (umutú) que el tiempo y el imperio criollo intentaron sepultar bajo el concreto. Las palabras que vas a leer y escuchar exudan maniká; trazan los ecos estructurales de una realidad lingüística resurrecta que se niega al olvido (atacá).\n\n¿Estás preparado para iniciar la secuencia de sincronización e integrar tu conciencia a la matria?",
     options: [
       { label: "Acoplar conciencia (Iniciar sincronización)", nextStep: '1' },
       { label: "Desconectar terminal (Abortar secuencia)", nextStep: '-1' }
     ]
   },
   '1': {
-    text: "[ ENLACE ESTABLECIDO ]\n\nEl sistema informa: Las voces originarias físicas no existen en grabaciones analógicas. \nRespuesta sistémica: Se ha invocado la asistencia de Modelos Fundacionales para simular la cadencia, el tono y la estructura morfológica pericú/guaicura utilizando heurísticas lakota.\n\nTienes ante ti los siguientes portales de la memoria:",
+    text: "[ ENLACE ESTABLECIDO ]\n\nEl sistema informa: Las voces originarias puras callaron antes del registro analógico.\nRespuesta sistémica: Se ha invocado un orquestador cognitivo para simular la cadencia, el tono y la estructura morfológica guaycura-huchití (5 vocales, orden SOV y sufijos negadores -ra/-ja) basándose en las fuentes históricas.\n\nTienes ante ti los siguientes umbrales hacia datembà:",
     options: [
       { label: "[1] Archivo Vivo (Explorar diccionario base)", nextStep: 'archivo' },
       { label: "[2] Arte Conceptual (Generar visiones rupestres)", nextStep: 'generador' },
