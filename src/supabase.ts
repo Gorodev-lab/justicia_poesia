@@ -1,7 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const getEnvVar = (name: string) => {
+  if (typeof process !== 'undefined' && process.env?.[name]) return process.env[name];
+  // @ts-ignore
+  if (typeof import.meta !== 'undefined' && import.meta.env?.[name]) return import.meta.env[name];
+  return undefined;
+};
+
+const supabaseUrl = getEnvVar('VITE_SUPABASE_URL') || getEnvVar('NEXT_PUBLIC_SUPABASE_URL');
+const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY') || getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
 const SUPABASE_AVAILABLE = !!(supabaseUrl && supabaseAnonKey);
 
