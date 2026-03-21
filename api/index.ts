@@ -19,7 +19,7 @@ let lastGeminiError: string | null = null;
 
 async function callGemini(sp: string, up: string, t = 0.7): Promise<string> {
   if (!genAI || !GEMINI_API_KEY) throw new Error('GEMINI_NO_KEY');
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: sp, generationConfig: { temperature: t } });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp', systemInstruction: sp, generationConfig: { temperature: t } });
   try {
     return (await model.generateContent(up)).response.text();
   } catch (err: any) {
@@ -181,7 +181,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
       }
 
-      return res.json({ text, engine, imageBase64 });
+      const cleanedDescription = text.replace(/\[Visión Sintética Generada\]:/g, '').trim();
+      return res.json({ text: cleanedDescription, engine, imageBase64 });
     }
 
     if (path === '/generate-audio' && req.method === 'POST') {
