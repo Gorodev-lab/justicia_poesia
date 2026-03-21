@@ -173,8 +173,8 @@ export default function App() {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-MX';
-    utterance.rate = 0.7; // Más rítmico
-    utterance.pitch = 0.5; // Voz más grave (ancestral)
+    utterance.rate = 0.6; // Cadencia lenta y pesada (perfil LKT)
+    utterance.pitch = 0.4; // Tono muy grave, resonante
     
     const voices = window.speechSynthesis.getVoices();
     // Priorizar voces graves

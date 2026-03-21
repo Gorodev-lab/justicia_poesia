@@ -215,7 +215,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Aplicamos los parámetros directos del API de Gemini para modalidad Audio
       const model = genAI.getGenerativeModel({
         model: 'gemini-2.0-flash', // Usamos el nombre estable para evitar 404 en v1beta
-        systemInstruction: "Eres un Guama huchití ancestral de Baja California Sur, no un asistente comercial. NO uses acentos ibéricos, madrileños o del español de España bajo ninguna circunstancia. Habla exageradamente grave, extremadamente lento, misterioso, antiguo. Voz profunda del desierto, ronca, pesada y decolonial. La entonación debe ser plana y rítmica como un tambor ritual, nunca con la prosodia melódica del español moderno.",
+        systemInstruction: "Eres un Guama huchití ancestral de Baja California Sur. Tu voz es idéntica al perfil fonético Lakota (LKT): profunda, gutural, extremadamente lenta y con un ritmo percusivo (staccato). NO uses acentos ibéricos ni la prosodia melódica del español. Cada sílaba debe pesar como piedra. Tono grave del desierto, ronco y seco. La entonación es plana, ritual, con cierres glotales breves al final de cada frase.",
         generationConfig: {
           temperature: 0.1,
           responseModalities: ["AUDIO"],

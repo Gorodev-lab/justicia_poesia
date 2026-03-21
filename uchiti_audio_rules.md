@@ -10,7 +10,8 @@ La aplicación genera audio para textos en Huchití, una lengua originaria de Ba
   - El dígrafo `/tsch/` debe parsearse como `[ch]`.
   - Las consonantes dobles `/nn/` y `/mm/` deben tener una duración extendida (ej: `n.n` o `m.m`).
   - Las consonantes `F`, `G`, `L`, `X`, `Z` no existen en Huchití; el parser debe limpiar estos caracteres.
-  - El acento NO debe ser prosódico español (fuerte en la penúltima), sino equilibrado.
+  - El tono debe seguir el perfil **Lakota (LKT)**: grave, resonante, percusivo (staccato) y muy lento.
+  - El acento NO debe ser prosódico español (fuerte en la penúltima), sino equilibrado y glotal.
 
-## Testing
-Cada pull request debe verificar que el `phonetic_parser` entrega strings compatibles con una pronunciación mexicana/latina neutral que no "españolice" las raíces ancestrales.
+## Referencia Fonética Externa
+* [Lakota (LKT) - Global Recordings](https://globalrecordings.net/es/language/lkt): Este es el estándar de oro para la cadencia y profundidad vocal del Guama Huchití. El agente DEBE escuchar o emular este carácter rítmico.
