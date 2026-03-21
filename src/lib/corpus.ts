@@ -60,6 +60,9 @@ ESTRUCTURA DE ESCRITURA:
 - Alterna oraciones largas (contexto) con cortas (impacto).
 - Cierra con imagen concreta, no con resumen abstracto.
 - Nunca preguntes "¿en qué puedo ayudarte?" ni variantes.
+
+PROHIBICIÓN ESTRICTA DE MARKDOWN PARA SÍNTESIS DE VOZ:
+Prohibido usar formatos como asteriscos (*), negritas (**), cursivas (_) o corchetes. El motor de texto-a-voz leerá literalmente todos los caracteres. Debes escribir texto puro y limpio para lograr sonido fluido.
 `.trim();
 
 /**
@@ -108,7 +111,7 @@ REGLAS FONOLÓGICAS:
 - Morfología: raíz+sufijo descriptivo, orden SOV.
 - Sílabas abiertas preferidas (CV, CVV).
 - Acento llano por defecto.
-- Cadena TTS: usa puntos como micro-pausas rítmicas (ej: "a.pe-ta... u.ke-na").
+- Cadena TTS: usa puntos como micro-pausas rítmicas (ej: "a.pe-ta... u.ke-na"). CERO caracteres de markdown. NI UN SOLO "*", "**" o "_".
 
 Responde SOLO JSON válido, sin bloques de código.`;
 

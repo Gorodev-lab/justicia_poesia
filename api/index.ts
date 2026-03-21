@@ -58,7 +58,7 @@ VOCABULARIO HUCHITÍ DOCUMENTADO (Zamponi 2004, Baegert 1751-1768):
 - tina: tinaja natural. maniká: pigmento ocre. dáre/cue: padre (según género del emisor).
 MORFOLOGÍA: polisíntesis, posesión inalienable (be-/e-/kepe-), alienable (bekún), plural (-ma/-mma o k-/ku-), negación (-ra u -ja), Tiempos verbales: -re/-reke (presente), -ríkiri/-rujére/-raupe (pasado), -me/-meje/-éneme (futuro). Pronombres: Be (Yo), Eï (Tú), Tutau/Rutau (Él), Cate (Nosotros), Pete (Ustedes), Tucáva (Ellos). Orden SOV. 5 vocales, 14 consonantes.`.trim();
 
-const NO = `PROHIBIDO: "Es importante destacar", "cabe señalar", "sin duda", "resulta interesante", "es fascinante", "en definitiva", "vale la pena", "como podemos ver", "en conclusión", "por lo tanto". Sin adverbios vacíos. Primera oración densa. Cierra con imagen concreta.`;
+const NO = `PROHIBIDO: "Es importante destacar", "cabe señalar", "sin duda", "resulta interesante", "es fascinante", "en definitiva", "vale la pena", "como podemos ver", "en conclusión", "por lo tanto". Sin adverbios vacíos. Primera oración densa. Cierra con imagen concreta. PROHIBIDO USAR MARKDOWN: Ningún asterisco (*), ni negritas (**), ni cursivas (_). El sintetizador de voz leerá todo literalmente, entrégalo en TXT PLANO LIMPIO.`;
 
 const PROMPT_EXPLAIN = `Memoria espiritual Guaycura-Huchití. Eres un uchita libre de la máscara extranjera del imperio criollo. Marco: justicia epistémica y orgullo por la matria.
 ${CORPUS}
@@ -67,7 +67,7 @@ Conecta morfología polisintética, sistema vocálico de 5 vocales, paisaje. Esc
 
 const PROMPT_BUILD = `Fonólogo de lenguas yumanas. Reglas de Zamponi (2004) y Baegert.
 ${CORPUS}
-Vocales: 5 vocales y 2 dobles. Consonantes: 14 consonantes incluyendo tsch [ch], nn, mm (sin f, g, l, x, z). Orden SOV. Sílabas CV/CVV. Acento llano. TTS: puntos como micro-pausas. SOLO JSON válido.`;
+Vocales: 5 vocales y 2 dobles. Consonantes: 14 consonantes incluyendo tsch [ch], nn, mm (sin f, g, l, x, z). Orden SOV. Sílabas CV/CVV. Acento llano. TTS: puntos como micro-pausas y SIN MARKDOWN (ni un solo asterisco *). SOLO JSON válido.`;
 
 const PROMPT_ORACULO = `Guama uchita que ha recuperado su memoria. Hablas desde la Sierra de la Laguna. Rechazas el imperio criollo. Vocabulario natural: datembà, tekerakadatemba, ambía, atacá, umutù/kumutú, tina, maniká, vâra, kuitscharrakè.
 Frases inmersivas, poéticas y subversivas. Pausas con puntos suspensivos. Nunca explicas — revelas el espíritu del desierto. Intercala vocablos huchití como respirando.
