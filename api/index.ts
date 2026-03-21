@@ -15,10 +15,17 @@ const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY || '';
 const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 const mistral = MISTRAL_API_KEY ? new Mistral({ apiKey: MISTRAL_API_KEY }) : null;
 
+let lastGeminiError: string | null = null;
+
 async function callGemini(sp: string, up: string, t = 0.7): Promise<string> {
   if (!genAI || !GEMINI_API_KEY) throw new Error('GEMINI_NO_KEY');
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', systemInstruction: sp, generationConfig: { temperature: t } });
-  return (await model.generateContent(up)).response.text();
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: sp, generationConfig: { temperature: t } });
+  try {
+    return (await model.generateContent(up)).response.text();
+  } catch (err: any) {
+    lastGeminiError = err.message;
+    throw err;
+  }
 }
 
 async function callMistral(sp: string, up: string, t = 0.7): Promise<string> {
@@ -111,6 +118,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({
         ok: true,
         engines: { gemini: GEMINI_API_KEY ? 'ready' : 'no_key', mistral: MISTRAL_API_KEY ? 'ready' : 'no_key' },
+        lastGeminiError
       });
     }
 
