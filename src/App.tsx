@@ -11,16 +11,17 @@ import { VocabloCard } from './components/VocabloCard';
 import { Generador } from './components/Generador';
 import { ConstructorFrases } from './components/ConstructorFrases';
 import { Oraculo } from './components/Oraculo';
+import { GlosarioInfografia } from './components/GlosarioInfografia';
 import {
   checkApiStatus,
   explainVocablo,
-  buildHuchitiPhrase,
+  buildUchitiPhrase,
   consultarOraculo,
   describeImage,
   generateNativeAudioEndpoint
 } from './lib/gemini';
 
-console.log("HUCHITI_V2_ACTIVE [APP]");
+console.log("UCHITI_V2_ACTIVE [APP]");
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [explanation, setExplanation] = useState<{ [key: number]: string }>({});
@@ -28,7 +29,7 @@ export default function App() {
   const [playingId, setPlayingId] = useState<number | null>(null);
   const [playingExplanationId, setPlayingExplanationId] = useState<number | null>(null);
   const [darkMode, setDarkMode] = useState(true);
-  const [activeTab, setActiveTab] = useState<'archivo' | 'generador' | 'juego' | 'constructor' | 'oraculo'>('archivo');
+  const [activeTab, setActiveTab] = useState<'archivo' | 'generador' | 'juego' | 'constructor' | 'oraculo' | 'glosario'>('archivo');
   const [showWizard, setShowWizard] = useState(true);
   
   // Auth state de Supabase
@@ -160,7 +161,7 @@ export default function App() {
 
   // ---- Funciones de SpeechSynthesis Nativas (Reemplazan TTS de Gemini) ----
   const speakText = async (rawText: string, voiceNamePattern: string, onStart: () => void, onEnd: () => void) => {
-    // Capa 1: Sanitizar puntuación -> Capa 2: Reglas fonéticas huchití
+    // Capa 1: Sanitizar puntuación -> Capa 2: Reglas fonéticas uchití
     const sanitized = sanitizeForTTS(rawText);
     const text = uchitiPhoneticParser(sanitized);
     
@@ -230,7 +231,7 @@ export default function App() {
     setLiveTranscript(prev => [...prev, "[SISTEMA]: Conexión terminada."]);
   };
 
-  // Envía un mensaje al Oráculo Huchití (chat conversacional con Gemini)
+  // Envía un mensaje al Oráculo Uchití (chat conversacional con Gemini)
   const sendToOraculo = async (text: string) => {
     const newMessage = { role: 'user', content: text };
     const newContext = [...oraculoMessages, newMessage];
@@ -270,9 +271,9 @@ export default function App() {
     if (!phraseInput) return;
     setIsPhraseLoading(true);
     try {
-      const jsonResponse = await buildHuchitiPhrase(phraseInput);
+      const jsonResponse = await buildUchitiPhrase(phraseInput);
       
-      const formattedResult = `[ ANÁLISIS MORFOLÓGICO ]\nOriginal: ${jsonResponse.palabra_original}\n\n[ SÍNTESIS HUCHITÍ ]\nComposición: ${jsonResponse.analisis_silabico}\nIPA: /${jsonResponse.transcripcion_ipa}/\n\n[ CADENA TTS ]\n${jsonResponse.cadena_optimizada_tts}`;
+      const formattedResult = `[ ANÁLISIS MORFOLÓGICO ]\nOriginal: ${jsonResponse.palabra_original}\n\n[ SÍNTESIS UCHITÍ ]\nComposición: ${jsonResponse.analisis_silabico}\nIPA: /${jsonResponse.transcripcion_ipa}/\n\n[ CADENA TTS ]\n${jsonResponse.cadena_optimizada_tts}`;
       
       setPhraseResult(formattedResult);
       if (jsonResponse.cadena_optimizada_tts) {
@@ -407,7 +408,7 @@ export default function App() {
             </div>
             <div className="space-y-1">
               <h1 className="text-4xl font-bold tracking-tighter">
-                HUCHITÍ EN CÓDIGO
+                UCHITÍ EN CÓDIGO
               </h1>
               <p className="text-xs uppercase tracking-[0.2em] font-medium opacity-70">
                 PROYECTO DATEMBÀ: RECUPERACIÓN ACTIVA
@@ -416,7 +417,7 @@ export default function App() {
           </div>
           
           <div className="flex flex-wrap items-center gap-2 bg-[var(--card-bg)] p-2 border border-[var(--border)]">
-            {['archivo', 'generador', 'juego', 'constructor', 'oraculo'].map((tab, i) => (
+            {['archivo', 'generador', 'juego', 'constructor', 'oraculo', 'glosario'].map((tab, i) => (
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
@@ -557,6 +558,10 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'glosario' && (
+          <GlosarioInfografia />
+        )}
+
         {activeTab === 'juego' && (
           <motion.div
             key="juego"
@@ -586,7 +591,7 @@ export default function App() {
       <footer className="max-w-5xl mx-auto px-6 py-12 text-center border-t border-[var(--border)]">
         <div className="space-y-4 opacity-50">
           <p className="text-[10px] uppercase tracking-[0.4em] font-bold">
-            © 2026 Huchití OS • Sistema de Recuperación Local
+            © 2026 Uchití OS • Sistema de Recuperación Local
           </p>
           <p className="text-sm">
             "Betania tina aena sheshutipe" — {session ? 'Sincronizado' : 'Modo Standalone'}

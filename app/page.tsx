@@ -13,7 +13,7 @@ export default function Page() {
   if (!mounted) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[var(--background)] text-[var(--accent)] text-xs font-mono uppercase tracking-[0.3em]">
-        [ INICIANDO NÚCLEO HUCHITÍ ]
+        [ INICIANDO NÚCLEO UCHITÍ ]
       </div>
     );
   }

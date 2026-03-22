@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'HUCHITÍ: PROYECTO DATEMBÀ',
+  title: 'UCHITÍ: PROYECTO DATEMBÀ',
   description: 'RECUPERACIÓN LINGÜÍSTICA ACTIVA',
 };
 

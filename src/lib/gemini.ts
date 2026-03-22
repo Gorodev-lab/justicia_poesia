@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-//  HUCHITÍ OS — Cliente AI Centralizado
+//  UCHITÍ OS — Cliente AI Centralizado
 //  Motor Primario: Google Gemini 2.0 Flash
 //  Motor Fallback: Mistral AI (mistral-small-latest)
 //  Todos los llamados AI del frontend pasan por aquí.
@@ -41,7 +41,7 @@ export async function checkApiStatus(): Promise<{ ok: boolean; activeEngine?: st
 }
 
 /**
- * Explica un vocablo huchití usando el motor AI activo.
+ * Explica un vocablo uchití usando el motor AI activo.
  */
 export async function explainVocablo(vocablo: string, significado: string): Promise<string> {
   const res = await fetch(`${API_BASE}/explain`, {
@@ -58,9 +58,9 @@ export async function explainVocablo(vocablo: string, significado: string): Prom
 }
 
 /**
- * Sintetiza una frase en huchití a partir de texto en español.
+ * Sintetiza una frase en uchití a partir de texto en español.
  */
-export async function buildHuchitiPhrase(phrase: string): Promise<PhraseBuildResponse> {
+export async function buildUchitiPhrase(phrase: string): Promise<PhraseBuildResponse> {
   const res = await fetch(`${API_BASE}/build-phrase`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -74,7 +74,7 @@ export async function buildHuchitiPhrase(phrase: string): Promise<PhraseBuildRes
 }
 
 /**
- * Envía mensajes al Oráculo Huchití (chat conversacional con Gemini).
+ * Envía mensajes al Oráculo Uchití (chat conversacional con Gemini).
  */
 export async function consultarOraculo(
   messages: Array<{ role: string; content: string }>
@@ -93,7 +93,7 @@ export async function consultarOraculo(
 }
 
 /**
- * Genera una descripción de arte rupestre huchití a partir de un prompt.
+ * Genera una descripción de arte rupestre uchití a partir de un prompt.
  */
 export async function describeImage(prompt: string): Promise<string> {
   const res = await fetch(`${API_BASE}/describe-image`, {

@@ -34,7 +34,7 @@ export function Oraculo({
       className="max-w-4xl mx-auto space-y-8"
     >
       <div className="space-y-2">
-        <h3 className="text-2xl font-bold">Oráculo Huchití</h3>
+        <h3 className="text-2xl font-bold">Oráculo Uchití</h3>
         <p className="text-sm opacity-50 uppercase tracking-widest">Conexión neuronal en tiempo real (Live API)</p>
       </div>
       

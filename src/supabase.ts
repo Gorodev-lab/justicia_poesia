@@ -13,7 +13,7 @@ const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY') || getEnvVar('NEXT_P
 const SUPABASE_AVAILABLE = !!(supabaseUrl && supabaseAnonKey);
 
 if (!SUPABASE_AVAILABLE) {
-  console.warn('[Huchití OS] Supabase no configurado — modo standalone activo.');
+  console.warn('[Uchití OS] Supabase no configurado — modo standalone activo.');
 }
 
 // Usamos placeholders válidos para que createClient no lance un error URL

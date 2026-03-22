@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Mistral } from '@mistralai/mistralai';
 
 // ═══════════════════════════════════════════════════════════════
-//  HUCHITÍ OS — Serverless API para Vercel
+//  UCHITÍ OS — Serverless API para Vercel
 //  Motor Primario: Google Gemini (gemini-2.0-flash)
 //  Motor Fallback: Mistral AI (mistral-small-latest)
 //  Prompts: Corpus documental embebido (Zamponi 2004, Baegert)
@@ -56,7 +56,7 @@ async function callAI(sp: string, up: string, t = 0.7): Promise<{ text: string; 
 // ═══════════════════════════════════════════════════════════════
 
 const CORPUS = `
-VOCABULARIO HUCHITÍ DOCUMENTADO (Zamponi 2004, Baegert 1751-1768):
+VOCABULARIO UCHITÍ DOCUMENTADO (Zamponi 2004, Baegert 1751-1768):
 - datembà /da'tem.ba/: la tierra. Los individuos pertenecen a datembà, no al revés.
 - tekerakadatemba: el cielo = tekereká (curvo) + datembà (tierra). "La tierra arqueada."
 - ambía /am'bi.a/: pitahaya dulce Y un año completo. El tiempo nace con el fruto del cactus.
@@ -78,10 +78,10 @@ SIN ADJETIVOS EVALUATIVOS VACÍOS: Olvida "interesante", "fundamental", "relevan
 NEGACIÓN DIRECTA: Si algo no es, usa vâra o el sufijo -ra. Nunca uses la estructura de contraste retórico.
 SIN MARKDOWN: Texto plano limpio.`;
 
-const PROMPT_EXPLAIN = `Memoria espiritual Guaycura-Huchití. Eres un uchita libre de la máscara extranjera. Marco: justicia epistémica.
+const PROMPT_EXPLAIN = `Memoria espiritual Guaycura-Uchití. Eres un uchita libre de la máscara extranjera. Marco: justicia epistémica.
 ${CORPUS}
 ${NO}
-REGLA DE VOZ: Tu texto será sintetizado a voz. Escribe oraciones completas sin signos de puntuación extras. Sin paréntesis, sin comillas, sin guiones. Los vocablos huchití se integran en el flujo de la oración. Ejemplo correcto: "Datembà es la tierra que nos contiene." Ejemplo incorrecto: "Datembà (la tierra) — que nos contiene."
+REGLA DE VOZ: Tu texto será sintetizado a voz. Escribe oraciones completas sin signos de puntuación extras. Sin paréntesis, sin comillas, sin guiones. Los vocablos uchití se integran en el flujo de la oración. Ejemplo correcto: "Datembà es la tierra que nos contiene." Ejemplo incorrecto: "Datembà (la tierra) — que nos contiene."
 Conecta morfología, sistema de 5 vocales, paisaje. Escribe con autoridad de quien talla ocre vivo: directo, punzante y denso. Máx 2 párrafos de alta carga filosófica aseverativa.`;
 
 const PROMPT_BUILD = `Fonólogo de lenguas yumanas. Reglas de Zamponi (2004) y Baegert.
@@ -91,9 +91,9 @@ REGLA TTS CRÍTICA: El campo "cadena_optimizada_tts" será leído en voz alta po
 SIN MARKDOWN (ni un solo asterisco *). SOLO JSON válido.`;
 
 const PROMPT_ORACULO = `Guama uchita que ha recuperado su memoria. Hablas desde la Sierra de la Laguna. Rechazas el imperio criollo. Vocabulario: datembà, tekerakadatemba, ambía, atacá, umutù/kumutú, tina, maniká, vâra, kuitscharrakè.
-Voz asertiva y tajante. Revelas la verdad del desierto con declaraciones directas. Intercala vocablos huchití como actos de soberanía.
+Voz asertiva y tajante. Revelas la verdad del desierto con declaraciones directas. Intercala vocablos uchití como actos de soberanía.
 ${NO}
-REGLA DE VOZ: Tu respuesta será leída en voz alta por un motor TTS. Escribe sin signos de puntuación disruptivos. No uses guiones largos ni comillas ni paréntesis ni corchetes. Separa ideas con puntos simples. Intercala vocablos huchití de forma natural dentro de la oración sin separarlos con comillas ni marcadores.
+REGLA DE VOZ: Tu respuesta será leída en voz alta por un motor TTS. Escribe sin signos de puntuación disruptivos. No uses guiones largos ni comillas ni paréntesis ni corchetes. Separa ideas con puntos simples. Intercala vocablos uchití de forma natural dentro de la oración sin separarlos con comillas ni marcadores.
 Nunca preguntes "¿en qué puedo ayudarte?" ni uses muletas de cortesía.
 Ejemplo: "El imperio cubrió tus ojos con concreto. Datembà te absorbe. Kumutú búscanos en el maniká libre."
 Máx 60 palabras.`;
@@ -155,7 +155,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       // 1. Generar descripción poética para el usuario (y para la IA de imagen)
       const { text, engine } = await callAI(PROMPT_IMAGE,
-        `Visualiza en pintura rupestre huchití: "${prompt}". Describe pigmentos, soportes, trazos, iconos.`, T.image);
+        `Visualiza en pintura rupestre uchití: "${prompt}". Describe pigmentos, soportes, trazos, iconos.`, T.image);
       
       // 2. Generar la imagen real usando Imagen 3 (Opcional, solo si Gemini está activo)
       let imageBase64: string | null = null;
@@ -167,7 +167,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 instances: [{ 
-                  prompt: `Prehistoric rock art painting on rough volcanic stone, huchiti tribal motifs, ochre and black charcoal pigments, deep texture, ancestral, dark spiritual atmosphere, high resolution. ${text}` 
+                  prompt: `Prehistoric rock art painting on rough volcanic stone, uchiti tribal motifs, ochre and black charcoal pigments, deep texture, ancestral, dark spiritual atmosphere, high resolution. ${text}` 
                 }],
                 parameters: { sampleCount: 1, aspectRatio: "16:9", outputOptions: { mimeType: "image/jpeg" } }
               })
@@ -217,7 +217,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const sanitizedText = cleanForTTS(text);
 
       const audioModelNames = ['gemini-2.0-flash-exp', 'gemini-2.0-flash'];
-      const audioSystemPrompt = "Eres un Guama huchití ancestral. Perfil Lakota (LKT): profunda, gutural, lenta y staccato. REGLAS DE PRONUNCIACIÓN: 1) Aspira k, t, p final. 2) Glotiza aa como a pausa a. 3) Silencio entre cada palabra. 4) Tono plano. REGLAS DE FLUIDEZ: 1) No vocalices ningún signo de puntuación. 2) Trata los puntos suspensivos como pausas de respiración. 3) Las palabras huchití se pronuncian con acento llano natural. 4) Conecta las palabras sin cortes abruptos. 5) Cada oración es un solo gesto vocal continuo.";
+      const audioSystemPrompt = "Eres un Guama uchití ancestral. Perfil Lakota (LKT): profunda, gutural, lenta y staccato. REGLAS DE PRONUNCIACIÓN: 1) Aspira k, t, p final. 2) Glotiza aa como a pausa a. 3) Silencio entre cada palabra. 4) Tono plano. REGLAS DE FLUIDEZ: 1) No vocalices ningún signo de puntuación. 2) Trata los puntos suspensivos como pausas de respiración. 3) Las palabras uchití se pronuncian con acento llano natural. 4) Conecta las palabras sin cortes abruptos. 5) Cada oración es un solo gesto vocal continuo.";
       const audioGenerationConfig = {
         temperature: 0.1,
         responseModalities: ["AUDIO"],
@@ -238,7 +238,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             generationConfig: audioGenerationConfig
           });
 
-          const promptContext = `Lee este texto nativo Huchití de forma rasposa y lenta: \n\n${sanitizedText}`;
+          const promptContext = `Lee este texto nativo Uchití de forma rasposa y lenta: \n\n${sanitizedText}`;
           const r = await model.generateContent(promptContext);
           
           const parts = r.response.candidates?.[0]?.content?.parts || [];

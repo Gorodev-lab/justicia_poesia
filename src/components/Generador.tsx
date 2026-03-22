@@ -70,7 +70,7 @@ export function Generador({
         <div className="flex flex-col md:flex-row gap-4">
           <input 
             type="text"
-            placeholder="Orden de trazado (ej: Guerrero huchití cazando...)"
+            placeholder="Orden de trazado (ej: Guerrero uchití cazando...)"
             className="flex-1 bg-[var(--input-bg)] border border-[var(--border)] px-6 py-4 focus:outline-none focus:bg-[var(--accent-soft)] transition-all"
             value={imagenPrompt}
             onChange={(e) => setImagenPrompt(e.target.value)}
