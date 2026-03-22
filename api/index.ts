@@ -81,17 +81,21 @@ SIN MARKDOWN: Texto plano limpio.`;
 const PROMPT_EXPLAIN = `Memoria espiritual Guaycura-Huchití. Eres un uchita libre de la máscara extranjera. Marco: justicia epistémica.
 ${CORPUS}
 ${NO}
+REGLA DE VOZ: Tu texto será sintetizado a voz. Escribe oraciones completas sin signos de puntuación extras. Sin paréntesis, sin comillas, sin guiones. Los vocablos huchití se integran en el flujo de la oración. Ejemplo correcto: "Datembà es la tierra que nos contiene." Ejemplo incorrecto: "Datembà (la tierra) — que nos contiene."
 Conecta morfología, sistema de 5 vocales, paisaje. Escribe con autoridad de quien talla ocre vivo: directo, punzante y denso. Máx 2 párrafos de alta carga filosófica aseverativa.`;
 
 const PROMPT_BUILD = `Fonólogo de lenguas yumanas. Reglas de Zamponi (2004) y Baegert.
 ${CORPUS}
-Vocales: 5 vocales y 2 dobles. Consonantes: 14 consonantes incluyendo tsch [ch], nn, mm (sin f, g, l, x, z). Orden SOV. Sílabas CV/CVV. Acento llano. TTS: puntos como micro-pausas y SIN MARKDOWN (ni un solo asterisco *). SOLO JSON válido.`;
+Vocales: 5 vocales y 2 dobles. Consonantes: 14 consonantes incluyendo tsch [ch], nn, mm (sin f, g, l, x, z). Orden SOV. Sílabas CV/CVV. Acento llano.
+REGLA TTS CRÍTICA: El campo "cadena_optimizada_tts" será leído en voz alta por un motor de síntesis de voz. NO incluyas signos de puntuación como comas ni guiones ni barras. Solo usa espacios entre palabras. Para indicar pausas usa tres puntos suspensivos. NO uses barras ni corchetes ni paréntesis. Solo letras espacios y puntos suspensivos.
+SIN MARKDOWN (ni un solo asterisco *). SOLO JSON válido.`;
 
 const PROMPT_ORACULO = `Guama uchita que ha recuperado su memoria. Hablas desde la Sierra de la Laguna. Rechazas el imperio criollo. Vocabulario: datembà, tekerakadatemba, ambía, atacá, umutù/kumutú, tina, maniká, vâra, kuitscharrakè.
 Voz asertiva y tajante. Revelas la verdad del desierto con declaraciones directas. Intercala vocablos huchití como actos de soberanía.
 ${NO}
+REGLA DE VOZ: Tu respuesta será leída en voz alta por un motor TTS. Escribe sin signos de puntuación disruptivos. No uses guiones largos ni comillas ni paréntesis ni corchetes. Separa ideas con puntos simples. Intercala vocablos huchití de forma natural dentro de la oración sin separarlos con comillas ni marcadores.
 Nunca preguntes "¿en qué puedo ayudarte?" ni uses muletas de cortesía.
-Ejemplo: "El imperio cubrió tus ojos con concreto. Datembà te absorbe. Kumutú — búscanos en el maniká libre."
+Ejemplo: "El imperio cubrió tus ojos con concreto. Datembà te absorbe. Kumutú búscanos en el maniká libre."
 Máx 60 palabras.`;
 
 const PROMPT_IMAGE = `Testigo directo del Gran Mural. Sitios: Cueva Pintada de San Gregorio, Cueva del Ratón, Cueva de las Flechas, San Borjitas, Cuesta Palmarito. Rojo (maniká/ocre) = vida. Negro (carbón) = umbral. Soporte: basalto, granito. Figuras interactúan con ciclos solares.
@@ -187,33 +191,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .replace(/\[Visión Sintética Generada\]:?\s*/gi, '')
         .trim();
 
-      // 4. Fallback de Imagen: Si Imagen 3 falló, el backend proxy via Pollinations (con timeout 8s)
+      // 4. Si Imagen 3 no estuvo disponible, devolver null (el frontend maneja el placeholder)
       if (!imageBase64) {
-        try {
-          const shortPrompt = cleanedDescription.split('.').slice(0, 2).join('.').substring(0, 300);
-          const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(
-            "Pintura rupestre huchití en cueva. " + shortPrompt
-          )}?width=768&height=512&nologo=true&seed=${Math.floor(Math.random() * 10000)}`;
-          
-          const pollAbort = new AbortController();
-          const pollTimeout = setTimeout(() => pollAbort.abort(), 8000);
-          try {
-            const pRes = await fetch(pollinationsUrl, { signal: pollAbort.signal });
-            clearTimeout(pollTimeout);
-            if (pRes.ok) {
-              const buffer = await pRes.arrayBuffer();
-              imageBase64 = Buffer.from(buffer).toString('base64');
-            }
-          } catch (fetchErr: any) {
-            clearTimeout(pollTimeout);
-            if (fetchErr.name === 'AbortError') {
-              console.warn("[POLLINATIONS] Timeout 8s — omitiendo imagen.");
-            } else { throw fetchErr; }
-          }
-        } catch (e: any) {
-          console.error("[BACKEND POLLINATIONS FALLBACK]", e.message);
-        }
+        console.warn("[IMAGEN] Motor Gemini Imagen3 no disponible. Devolviendo texto solamente.");
       }
+
 
       return res.json({ text: cleanedDescription, engine, imageBase64 });
     }
@@ -222,8 +204,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { text = '' } = req.body || {};
       if (!genAI || !GEMINI_API_KEY) throw new Error("GEMINI_NO_KEY");
 
+      // Capa 4: Sanitizador server-side para TTS
+      const cleanForTTS = (t: string) => t
+        .replace(/\[.*?\]/g, '')
+        .replace(/\/[^/]+\//g, '')
+        .replace(/[\u2014\u2013\-:;!\u00a1\u00bf?*#_~`\u201c\u201d\u201e\u2018\u2019\u00ab\u00bb(){}\\|@&$/"']/g, '')
+        .replace(/,/g, ' ')
+        .replace(/\.{2,}/g, '...')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
+      const sanitizedText = cleanForTTS(text);
+
       const audioModelNames = ['gemini-2.0-flash-exp', 'gemini-2.0-flash'];
-      const audioSystemPrompt = "Eres un Guama huchití ancestral. Perfil Lakota (LKT): profunda, gutural, lenta y staccato. REGLAS: 1) Aspira k, t, p final. 2) Glotiza aa -> a-a. 3) Silencio entre cada palabra. 4) Tono plano.";
+      const audioSystemPrompt = "Eres un Guama huchití ancestral. Perfil Lakota (LKT): profunda, gutural, lenta y staccato. REGLAS DE PRONUNCIACIÓN: 1) Aspira k, t, p final. 2) Glotiza aa como a pausa a. 3) Silencio entre cada palabra. 4) Tono plano. REGLAS DE FLUIDEZ: 1) No vocalices ningún signo de puntuación. 2) Trata los puntos suspensivos como pausas de respiración. 3) Las palabras huchití se pronuncian con acento llano natural. 4) Conecta las palabras sin cortes abruptos. 5) Cada oración es un solo gesto vocal continuo.";
       const audioGenerationConfig = {
         temperature: 0.1,
         responseModalities: ["AUDIO"],
@@ -244,7 +238,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             generationConfig: audioGenerationConfig
           });
 
-          const promptContext = `Lee este ritual nativo Huchití de forma rasposa y lenta (estilo LKT): \n\n${text}`;
+          const promptContext = `Lee este texto nativo Huchití de forma rasposa y lenta: \n\n${sanitizedText}`;
           const r = await model.generateContent(promptContext);
           
           const parts = r.response.candidates?.[0]?.content?.parts || [];

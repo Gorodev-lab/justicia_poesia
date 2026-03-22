@@ -127,26 +127,42 @@ export default function App() {
     await supabase.auth.signOut();
   };
 
-  // ---- Capa de Pre-procesamiento Fonético (Uchití Audio Rules v2 - Perfil LKT) ----
-  const uchitiPhoneticParser = (text: string) => {
+  // ---- Capa 1: Sanitizador de Puntuación para TTS ----
+  const sanitizeForTTS = (text: string): string => {
+    return text
+      .replace(/\[.*?\]/g, '')
+      .replace(/\/[^/]+\//g, '')
+      .replace(/^(Original|Composición|IPA|Cadena TTS|ANÁLISIS|SÍNTESIS):?\s*/gm, '')
+      .replace(/[\u2014\u2013\-:;!\u00a1\u00bf?*#_~`\u201c\u201d\u201e\u2018\u2019\u00ab\u00bb(){}\\|@&$/"']/g, '')
+      .replace(/,/g, ' ')
+      .replace(/\.{2,}/g, '...')
+      .replace(/\s{2,}/g, ' ')
+      .replace(/\n{2,}/g, '\n')
+      .trim();
+  };
+
+  // ---- Capa 2: Pre-procesamiento Fonético (Uchití Audio Rules v3 - Perfil LKT) ----
+  const uchitiPhoneticParser = (text: string): string => {
     return text
       .toLowerCase()
-      .replace(/tsch/g, 'ch')           // Regla: tsch -> ch
-      .replace(/nn/g, 'n.n')            // Regla: nn -> n.n
-      .replace(/mm/g, 'm.m')            // Regla: mm -> m.m
-      .replace(/([aeiou])\1/g, '$1-$1') // Regla: Glotización de vocales dobles (aa -> a-a)
-      .replace(/k(\s|$|\.)/g, 'kh$1')   // Regla: Aspiración de k final
-      .replace(/t(\s|$|\.)/g, 'th$1')   // Regla: Aspiración de t final
-      .replace(/p(\s|$|\.)/g, 'ph$1')   // Regla: Aspiración de p final
-      .replace(/[fglxz]/g, '')         // Regla: eliminar letras no existentes
-      .replace(/\s+/g, '. ')            // Regla: Forzar pausa entre palabras (punto invisible)
+      .replace(/tsch/g, 'ch')
+      .replace(/tsh/g, 'ch')
+      .replace(/nn/g, 'n.n')
+      .replace(/mm/g, 'm.m')
+      .replace(/([aeiou])\1/g, '$1.$1')
+      .replace(/k(\s|$|\.)/g, 'kh$1')
+      .replace(/t(\s|$|\.)/g, 'th$1')
+      .replace(/p(\s|$|\.)/g, 'ph$1')
+      .replace(/[fglxz]/g, '')
+      .replace(/\s+/g, ' ')
       .trim();
   };
 
   // ---- Funciones de SpeechSynthesis Nativas (Reemplazan TTS de Gemini) ----
   const speakText = async (rawText: string, voiceNamePattern: string, onStart: () => void, onEnd: () => void) => {
-    // Procesamos el texto antes de enviarlo al motor
-    const text = uchitiPhoneticParser(rawText);
+    // Capa 1: Sanitizar puntuación -> Capa 2: Reglas fonéticas huchití
+    const sanitized = sanitizeForTTS(rawText);
+    const text = uchitiPhoneticParser(sanitized);
     
     // Si pasamos la bandera 'Gemini-Guama', disparamos la Estrategia 2 (Audio Nativo Alta Calidad)
     if (voiceNamePattern === 'Gemini-Guama') {
