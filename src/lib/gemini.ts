@@ -93,9 +93,9 @@ export async function consultarOraculo(
 }
 
 /**
- * Genera una descripción de arte rupestre uchití a partir de un prompt.
+ * Genera una descripción de arte rupestre uchití y su correspondiente imagen base64.
  */
-export async function describeImage(prompt: string): Promise<string> {
+export async function describeImage(prompt: string): Promise<AITextResponse> {
   const res = await fetch(`${API_BASE}/describe-image`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -105,8 +105,7 @@ export async function describeImage(prompt: string): Promise<string> {
     const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
     throw new Error(err.error || `HTTP ${res.status}`);
   }
-  const data: AITextResponse = await res.json();
-  return data.text;
+  return res.json();
 }
 
 export async function generateNativeAudioEndpoint(text: string): Promise<string> {

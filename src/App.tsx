@@ -325,13 +325,7 @@ export default function App() {
     setImagenLoading(true);
     setImagenBase64(null); // Reset previous image
     try {
-      const res = await fetch('/api/describe-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: imagenPrompt }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await describeImage(imagenPrompt);
       
       setImagenResult(data.text);
       if (data.imageBase64) {
@@ -352,8 +346,8 @@ export default function App() {
       if (selectedFile) {
         setVeoResult(`[Análisis Qwen-VL de Archivo]: Procesamiento simulado para rediseño sin acceso GPU directo... \n(En producción apuntar a puerto :8002)`);
       } else {
-        const text = await describeImage(`Formato de Guion Audiovisual: ${veoPrompt}`);
-        setVeoResult(`[Narrativa Audiovisual Generada]:\n\n${text}`);
+        const data = await describeImage(`Formato de Guion Audiovisual: ${veoPrompt}`);
+        setVeoResult(`[Narrativa Audiovisual Generada]:\n\n${data.text}`);
       }
     } catch (error: any) {
       console.error('[generateVideo]', error.message);
